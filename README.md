@@ -7,5 +7,5 @@ Este trabajo contiene:
 
 - `document`: Documento final PDF, desarrollo PS2 y predicciones para cada modelo.
 - `scripts`: Scripts de R
-- `stores`: Bases utilizadas
+- `dataPS3`: Bases utilizadas
 - `views`: Imágenes y Tablas

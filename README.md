@@ -5,7 +5,7 @@ En este repositorio se encuentra el desarrollo del tercer problem set de la asig
 
 Este trabajo contiene:
 
-- `document`: Documento final PDF, desarrollo PS2 y predicciones para cada modelo.
+- `document`: Documento final PDF, desarrollo PS3 y predicciones para cada modelo.
 - `scripts`: Scripts de R
 - `dataPS3`: Bases utilizadas
 - `views`: Imágenes y Tablas

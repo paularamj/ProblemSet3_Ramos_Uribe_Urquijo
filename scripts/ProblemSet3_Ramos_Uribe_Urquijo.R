@@ -34,7 +34,8 @@ test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/d
 
 ######Data######
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326)
-available_features() #Escoger features y buscar dentro subcaracteristicas
+available_features() #Escoger features 
+available_tags("amenity") %>% head(20) #Buscar y escoger dentro subcaracteristicas
 
 ###Creación de 4 variables extra
 

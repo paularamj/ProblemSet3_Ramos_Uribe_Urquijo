@@ -22,40 +22,65 @@ p_load(skimr, # summary data
        dplyr,
        robotstxt,
        sf, # Leer/escribir/manipular datos espaciales
-       leaflef, #visualizción
+       leaflet, #visualizción
        tmaptools, #geocode
        osmdata # Get OSM data
 )
-p_load(sf) 
 
 ##############################Cargar los datos#################################
-#train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
-train<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
-#test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
-test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
+train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
+#train<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
+test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
+#test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 
-######Data######
-db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326)
+##########Data########
+db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
+leaflet() %>% addTiles() %>% addCircles(data=db)
+class(db)
+Pol_db  <- st_bbox(db)
+class(Pol_db)
+
 available_features() #Escoger features 
-available_tags("amenity") %>% head(20) #Buscar y escoger dentro subcaracteristicas
-##Definir area de busqueda
-osm = opq(bbox = getbb("Bogotá Colombia")) %>%
-  add_osm_feature(key="amenity" , value="bus_station") 
-class(osm)
+##Variables de OSM
 
-osm_sf = osm %>% osmdata_sf()
-osm_sf
+###bares
+bar <- opq(bbox = st_bbox(Pol_db)) %>%
+  add_osm_feature(key = "amenity", value = "bar")
+class(bar)
 
-bus_station = osm_sf$osm_points %>% select(osm_id,amenity) 
-bus_station
+osm_bar<- bar %>% osmdata_sf()
+bares <- osm_bar$osm_points %>% select(osm_id,amenity) 
+class(bares)
 
+###estaciones de bus
+estacion_bus <- opq(bbox = st_bbox(Pol_db)) %>%
+  add_osm_feature(key = "amenity", value = "bus_station")
+class(estacion_bus)
 
-###Creación de 4 variables extra
-#Operaciones geometricas
-bar = opq(bbox = st_bbox(db)) %>%
-  add_osm_feature(key = "amenity", value = "bar") %>%
-  osmdata_sf() %>% .$osm_points %>% select(osm_id,name)
-bar %>% head()
+osm_bs<- estacion_bus %>% osmdata_sf()
+bus_station <- osm_bs$osm_points %>% select(osm_id,amenity) 
+
+###parques
+parques <- opq(bbox = st_bbox(Pol_db)) %>%
+  add_osm_feature(key = "leisure", value = "park")
+
+osm_ps<- parques %>% osmdata_sf()
+parks <- osm_ps$osm_polygons %>% select(osm_id,leisure) 
+
+###bancos
+bancos = opq(bbox = st_bbox(Pol_db)) %>%
+  add_osm_feature(key = "amenity", value = "bank")
+
+osm_bks<- bancos %>% osmdata_sf()
+banks <- osm_bks$osm_points %>% select(osm_id,amenity) 
+
+##Inspección gráfica
+leaflet() %>% addTiles() %>% 
+  addCircleMarkers(data=db , col="red", weight=2)%>% #datos
+  addPolygons(data=parks , col="green") %>%  #parques
+  addCircles(data=bares , col="blue") %>%  #bares
+  addCircles(data=banks , col="black" , weight=2)%>% # bancos
+  addCircles(data=bus_station , col="yellow")  #estaciones de bus
 
 
 ###Estadisticas descriptivas y mapas

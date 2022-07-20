@@ -37,9 +37,6 @@ test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/d
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
 leaflet() %>% addTiles() %>% addCircles(data=db)
 class(db)
-Pol_db  <- st_bbox(db)
-class(Pol_db)
-
 
 ##Chapinero
 chapinero <- getbb(place_name = "UPZ Chapinero, Bogota", 
@@ -47,43 +44,68 @@ chapinero <- getbb(place_name = "UPZ Chapinero, Bogota",
                    format_out = "sf_polygon") %>% .$multipolygon
 
 leaflet() %>% addTiles() %>% addPolygons(data=chapinero)
-train_chapinero <- st_crop (train, chapinero)
+train_chapinero <- st_crop(db, chapinero)
 
 ##Poblado
 poblado <- getbb(place_name = "Comuna 14 - El Poblado", 
                  featuretype = "boundary:administrative", 
                  format_out = "sf_polygon") 
 leaflet() %>% addTiles() %>% addPolygons(data=poblado)
-train_poblado <- st_crop (train , poblado)
+train_poblado <- st_crop (db, poblado)
 
 available_features() #Escoger features 
-##Variables de OSM
 
-###bares
-bar <- opq(bbox = st_bbox(Pol_db)) %>%
+######Variables de OSM######
+
+###Variable: Bares
+
+bar_chap <- opq(bbox = st_bbox(chapinero)) %>%
   add_osm_feature(key = "amenity", value = "bar")
-class(bar)
+class(bar_chap)
+osm_bar_chap<- bar_chap %>% osmdata_sf()
+##points
+bares_chapinero <- osm_bar$osm_points %>% select(osm_id,amenity) 
+class(bares_chapinero)
 
-osm_bar<- bar %>% osmdata_sf()
-bares <- osm_bar$osm_points %>% select(osm_id,amenity) 
-class(bares)
+bar_pob <- opq(bbox = st_bbox(poblado)) %>%
+  add_osm_feature(key = "amenity", value = "bar")
+class(bar_pob)
+osm_bar_pob<- bar_pob %>% osmdata_sf()
+##points
+bares_poblado <- osm_bar_pob$osm_points %>% select(osm_id,amenity) 
+class(bares_poblado)
 
-###estaciones de bus
-estacion_bus <- opq(bbox = st_bbox(Pol_db)) %>%
+###Variable: Estaciones de bus
+est_bus_chap <- opq(bbox = st_bbox(chapinero)) %>%
   add_osm_feature(key = "amenity", value = "bus_station")
-class(estacion_bus)
+class(est_bus_chap)
+#lista de los objetos
+osm_eb_chap<- est_bus_chap%>% osmdata_sf()
+#points
+estaciones_chapinero <- osm_eb_chap$osm_points %>% select(osm_id,amenity) 
 
-osm_bs<- estacion_bus %>% osmdata_sf()
-bus_station <- osm_bs$osm_points %>% select(osm_id,amenity) 
+est_bus_pob <- opq(bbox = st_bbox(poblado)) %>%
+  add_osm_feature(key = "amenity", value = "bus_station")
+class(est_bus_pob)
+osm_eb_pob<- est_bus_pob%>% osmdata_sf()
+#points
+estaciones_poblado <- osm_eb_pob$osm_points %>% select(osm_id,amenity) 
 
-###parques
-parques <- opq(bbox = st_bbox(Pol_db)) %>%
+###Variable: Parques
+
+parques_chap <- opq(bbox = st_bbox(chapinero)) %>%
   add_osm_feature(key = "leisure", value = "park")
+osm_park_cha<- parques_chap %>% osmdata_sf()
+#poligonos
+parques_chapinero<- osm_park_cha$osm_polygons %>% select(osm_id,leisure) 
 
-osm_ps<- parques %>% osmdata_sf()
-parks <- osm_ps$osm_polygons %>% select(osm_id,leisure) 
+parques_pob <- opq(bbox = st_bbox(poblado)) %>%
+  add_osm_feature(key = "leisure", value = "park")
+osm_park_pob<- parques_pob %>% osmdata_sf()
+#poligonos
+parques_pob <- osm_park_pob$osm_polygons %>% select(osm_id,leisure) 
 
-###bancos
+###Variable: Bancos
 bancos = opq(bbox = st_bbox(Pol_db)) %>%
   add_osm_feature(key = "amenity", value = "bank")
 

@@ -24,7 +24,7 @@ p_load(skimr, # summary data
        sf, # Leer/escribir/manipular datos espaciales
        leaflef, #visualizción
        tmaptools, #geocode
-       psmdata # Get OSM data
+       osmdata # Get OSM data
 )
 
 
@@ -34,6 +34,7 @@ test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/d
 
 ######Data######
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326)
+available_features() #Escoger features y buscar dentro subcaracteristicas
 
 ###Creación de 4 variables extra
 

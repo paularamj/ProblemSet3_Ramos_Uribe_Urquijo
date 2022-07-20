@@ -36,6 +36,17 @@ test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/d
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326)
 available_features() #Escoger features 
 available_tags("amenity") %>% head(20) #Buscar y escoger dentro subcaracteristicas
+##Definir area de busqueda
+osm = opq(bbox = getbb("Bogotá Colombia")) %>%
+  add_osm_feature(key="amenity" , value="bus_station") 
+class(osm)
+
+osm_sf = osm %>% osmdata_sf()
+osm_sf
+
+bus_station = osm_sf$osm_points %>% select(osm_id,amenity) 
+bus_station
+
 
 ###Creación de 4 variables extra
 

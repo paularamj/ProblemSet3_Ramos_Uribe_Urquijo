@@ -40,6 +40,22 @@ class(db)
 Pol_db  <- st_bbox(db)
 class(Pol_db)
 
+
+##Chapinero
+chapinero <- getbb(place_name = "UPZ Chapinero, Bogota", 
+                   featuretype = "boundary:administrative", 
+                   format_out = "sf_polygon") %>% .$multipolygon
+
+leaflet() %>% addTiles() %>% addPolygons(data=chapinero)
+train_chapinero <- st_crop (train, chapinero)
+
+##Poblado
+poblado <- getbb(place_name = "Comuna 14 - El Poblado", 
+                 featuretype = "boundary:administrative", 
+                 format_out = "sf_polygon") 
+leaflet() %>% addTiles() %>% addPolygons(data=poblado)
+train_poblado <- st_crop (train , poblado)
+
 available_features() #Escoger features 
 ##Variables de OSM
 
@@ -82,6 +98,10 @@ leaflet() %>% addTiles() %>%
   addCircles(data=banks , col="black" , weight=2)%>% # bancos
   addCircles(data=bus_station , col="yellow")  #estaciones de bus
 
+##Variables de description
+
+
+##Agregar a la base de datos 
 
 ###Estadisticas descriptivas y mapas
 

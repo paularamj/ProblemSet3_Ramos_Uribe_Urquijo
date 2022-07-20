@@ -20,7 +20,11 @@ p_load(skimr, # summary data
        rvest,
        stringr,
        dplyr,
-       robotstxt
+       robotstxt,
+       sf, # Leer/escribir/manipular datos espaciales
+       leaflef, #visualizción
+       tmaptools, #geocode
+       psmdata # Get OSM data
 )
 
 
@@ -29,6 +33,8 @@ train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/
 test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 
 ######Data######
+db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326)
+
 ###Creación de 4 variables extra
 
 

@@ -49,9 +49,14 @@ bus_station
 
 
 ###Creación de 4 variables extra
+#Operaciones geometricas
+bar = opq(bbox = st_bbox(db)) %>%
+  add_osm_feature(key = "amenity", value = "bar") %>%
+  osmdata_sf() %>% .$osm_points %>% select(osm_id,name)
+bar %>% head()
 
 
-###Estadpisticas descriptivas y mapas
+###Estadisticas descriptivas y mapas
 
 
 #####Modelos######

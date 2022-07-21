@@ -33,7 +33,63 @@ train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/
 test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 #test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 
-##########Data########
+##########Explorción de los datos########
+skim(train)
+##Variables con mayor porcentaje de missing values (surface_covered, surface_total)
+table(is.na(train$surface_covered))
+table(is.na(train$surface_total))
+##Datos de área en formato texto en la descripción
+
+browseURL("https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf") #guía strings (tidyverse)
+
+#Nueva variable de surface (rescatar mt2 en la descripción)
+train$description <- str_to_lower(train$description)
+x <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+m2" ##Patron 1 (Area en la descripción M2)
+train =train %>% mutate(new_surface = str_extract(string = train$description, pattern = x ))
+table(train$new_surface)
+y <- "[:space:]+[:digit:]+[:space:]+metros" ##Patron 2
+train =train %>% mutate(new_surface = 
+                          ifelse(is.na(new_surface)==T, 
+                                 str_extract(string = train$description,
+                                 pattern = y),
+                                 new_surface))
+z <- "[:space:]+[:digit:]+[:space:]+mts" ##Patron 2
+train =train %>% mutate(new_surface = 
+                          ifelse(is.na(new_surface)==T, 
+                                 str_extract(string = train$description,
+                                             pattern = z),
+                                 new_surface))
+sum(table(train$new_surface)) ##Rescata 21722 obs con los tres patrones
+
+
+####Creación de Variables de la columna description (Mínimo 2)
+
+##Piso
+x_1 <- "[:space:]+[:digit:]+[:space:]+piso" ##Patron 1 (Piso - Intuición un piso más alto cuesta más)
+train =train %>% mutate(piso = str_extract(string = train$description, pattern = x_1 ))
+table(train$piso)
+y_1 <- "[:space:]+[:digit:]+piso" ##Patron 2
+z_1 <- "[:space:]++piso+[:space:]+[:digit:]" ##Patron 3
+train =train %>% mutate(piso= 
+                          ifelse(is.na(piso)==T, 
+                                 str_extract(string = train$description,
+                                             pattern = y_1),
+                                 piso))
+train =train %>% mutate(piso= 
+                          ifelse(is.na(piso)==T, 
+                                 str_extract(string = train$description,
+                                             pattern = z_1),
+                                             piso))
+sum(table(train$piso)) ##Rescata 15507 obs con los dos patrones
+
+##Estrato
+x_1 <- "[:space:]+estrato+[:space:]+[:digit:]" ##Patron 1 (Estrato)
+y_1 <- "[:space:]+estrato+[:space:]+[:space:]+[:digit:]"
+z_1 <- "[:space:]+estrato+[:digit:]"
+train =train %>% mutate(estrato = str_extract(string = train$description, pattern = paste0(x_1,"|", y_1,"|", z_1)))
+sum(table(train$estrato)) ##Solo se recuperan 8828
+
+##########Data - Spatial########
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
 leaflet() %>% addTiles() %>% addCircles(data=db)
 class(db)
@@ -198,10 +254,8 @@ min_dist_eb_p <- apply(dist_eb_pob , 1 , min)
 min_dist_eb_p
 housing_poblado$dist_estacionbus<- min_dist_eb_p
 
-##Variables de description
 
 
-##Agregar a la base de datos 
 
 ###Estadisticas descriptivas y mapas
 

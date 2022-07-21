@@ -61,7 +61,7 @@ available_features() #Escoger features
 bar_chap <- opq(bbox = st_bbox(chapinero)) %>%
   add_osm_feature(key = "amenity", value = "bar")
 osm_bar_chap<- bar_chap %>% osmdata_sf()
-bares_chapinero <- osm_bar$osm_points %>% select(osm_id,amenity) ##points
+bares_chapinero <- osm_bar_chap$osm_points %>% select(osm_id,amenity) ##points
 #Poblado
 bar_pob <- opq(bbox = st_bbox(poblado)) %>%
   add_osm_feature(key = "amenity", value = "bar")
@@ -93,7 +93,7 @@ parques_chapinero<- osm_park_cha$osm_polygons %>% select(osm_id,leisure) #poligo
 parques_pob <- opq(bbox = st_bbox(poblado)) %>%
   add_osm_feature(key = "leisure", value = "park")
 osm_park_pob<- parques_pob %>% osmdata_sf() #lista de elementos (points, lines, poligonos)
-parques_pob <- osm_park_pob$osm_polygons %>% select(osm_id,leisure) #poligonos
+parques_poblado <- osm_park_pob$osm_polygons %>% select(osm_id,leisure) #poligonos
  
 ###Variable: Bancos
 #Chapinero
@@ -123,36 +123,80 @@ leaflet() %>% addTiles() %>%
 ##Lectura de archivos shp del DANE
 Bogota_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_11_BOGOTA/11_BOGOTA/URBANO/MGN_URB_MANZANA.shp")
 Antioquia_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_05_ANTIOQUIA/05_ANTIOQUIA/URBANO/MGN_URB_MANZANA.shp")
-######Nota: Deje la ruta de desacargas porque no me deja vincularlo al shp file en nuestra carpeta de github
+Medellin_mzn<- Antioquia_mzn[Antioquia_mzn$MPIO_CCDGO == "05001", ]
+class(Medellin_mzn)
+######Nota: Deje la ruta de desacargas porque no me deja vincularlo el shp file de nuestra carpeta de github
 
+#Creación de variables OSM 
 
 ##Afinar las transformaciones
 st_crs(Bogota_mzn) == st_crs(train_chapinero)
-st_crs(Antioquia_mzn) == st_crs(train_poblado)
+st_crs(Medellin_mzn) == st_crs(train_poblado)
+#Esto lo que hace es recuperar el sistema de referencia de coordenadas del objeto train_chapinero y del objeto train_poblado
 
 ##Unir dos conjuntos de datos basados en la geometría
-housing_chapinero = st_join(x=train_chapinero , y=Bogota_mzn)
-housing_poblado = st_join(x=train_poblado , y=Antioquia_mzn)
+housing_chapinero <- st_join(x=train_chapinero , y=Bogota_mzn) #Validación se mantienen las 15615 obs
+housing_poblado <- st_join(x=train_poblado , y=Medellin_mzn) #Validación se mantienen las 1677 obs
 
-##Precio promedio
-max_price = st_join(x=st_buffer(x=train_chapinero, dist=50) , y=Bogota_mzn)
-st_geometry(max_price) = NULL
+###Variable: Distancia a bares###
+##Chapinero
+dist_bar_chp <- st_distance(x=housing_chapinero, y=bares_chapinero)
+dist_bar_chp
+min_dist_c <- apply(dist_bar_chp , 1 , min)
+min_dist
+housing_chapinero$dist_bar <- min_dist
 
+##Poblado
+dist_bar_pob <- st_distance(x=housing_poblado, y=bares_poblado)
+dist_bar
+min_dist_p <- apply(dist_bar_pob , 1 , min) #distancia mínima a cada bar
+min_dist_p
+housing_poblado$dist_bar <- min_dist_p
 
+###Variable: Distancia a parques###
+##Chapinero
+dist_pq_chp <- st_distance(x=housing_chapinero, y=parques_chapinero)
+dist_pq_chp
+min_dist_p_c <- apply(dist_pq_chp , 1 , min)
+min_dist_p_c
+housing_chapinero$dist_parque <- min_dist_p_c
 
+##Poblado
+dist_pq_pob <- st_distance(x=housing_poblado, y=parques_poblado)
+dist_pq_pob
+min_dist_p_p <- apply(dist_pq_pob , 1 , min)
+min_dist_p_p
+housing_poblado$dist_parque <- min_dist_p_p
 
-##Variable: Distancia a bares
+##Variable: Distancia a bancos###
+##Chapinero
+dist_bc_chp <- st_distance(x=housing_chapinero, y=bancos_chapinero)
+dist_bc_chp
+min_dist_b_c <- apply(dist_bc_chp , 1 , min)
+min_dist_b_c
+housing_chapinero$dist_banco <- min_dist_b_c
 
-dist_bar = st_distance(x=housing_p , y=bar)
+##Poblado
+dist_bc_pob <- st_distance(x=housing_poblado, y=parques_poblado)
+dist_bc_pob
+min_dist_p_p <- apply(dist_pq_pob , 1 , min)
+min_dist_p_p
+housing_poblado$dist_banco <- min_dist_p_p
 
+##Variable: Distancia a estaciones de bus###
+##Chapinero
+dist_eb_chp <- st_distance(x=housing_chapinero, y=estaciones_chapinero)
+dist_eb_chp
+min_dist_eb_c <- apply(dist_eb_chp , 1 , min)
+min_dist_eb_c
+housing_chapinero$dist_estacionbus <- min_dist_eb_c
 
-
-##Variable: Distancia a parques 
-
-
-##Variable: Distancia a bancos
-
-
+##Poblado
+dist_eb_pob <- st_distance(x=housing_poblado, y=estaciones_poblado)
+dist_eb_pob
+min_dist_eb_p <- apply(dist_eb_pob , 1 , min)
+min_dist_eb_p
+housing_poblado$dist_estacionbus<- min_dist_eb_p
 
 ##Variables de description
 

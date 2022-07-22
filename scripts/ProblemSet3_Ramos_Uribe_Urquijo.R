@@ -28,13 +28,15 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
+setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+
 #train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
 #train<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
-train<-readRDS("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
+train<-readRDS("dataPS3/train.Rds")
 
 #test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 #test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
-test<-readRDS("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
+test<-readRDS("dataPS3/test.Rds")
 
 ##########Explorción de los datos########
 skim(train)
@@ -182,10 +184,19 @@ leaflet() %>% addTiles() %>%
   addCircles(data=estaciones_poblado , col="yellow")  #estaciones de bus
 
 ##Lectura de archivos shp del DANE
-Bogota_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_11_BOGOTA/11_BOGOTA/URBANO/MGN_URB_MANZANA.shp")
-Antioquia_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_05_ANTIOQUIA/05_ANTIOQUIA/URBANO/MGN_URB_MANZANA.shp")
+
+library(sf)
+
+Bogota_mzn<-  st_read("dataPS3/Manzana Bog/MGN_URB_MANZANA.shp")
+Antioquia_mzn <- st_read("dataPS3/Manzana Antioquia/MGN_URB_MANZANA.shp")
+
+#Bogota_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_11_BOGOTA/11_BOGOTA/URBANO/MGN_URB_MANZANA.shp")
+#Antioquia_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_05_ANTIOQUIA/05_ANTIOQUIA/URBANO/MGN_URB_MANZANA.shp")
+
 Medellin_mzn<- Antioquia_mzn[Antioquia_mzn$MPIO_CCDGO == "05001", ]
 class(Medellin_mzn)
+
+
 ######Nota: Deje la ruta de desacargas porque no me deja vincularlo el shp file de nuestra carpeta de github
 
 #Creacion de variables OSM 

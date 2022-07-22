@@ -28,10 +28,13 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
+#train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
 #train<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
-test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
+train<-readRDS("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
+
+#test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 #test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
+test<-readRDS("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 
 ##########Explorción de los datos########
 skim(train)
@@ -40,11 +43,11 @@ table(is.na(train$surface_covered))
 table(is.na(train$surface_total))
 ##Datos de área en formato texto en la descripción
 
-browseURL("https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf") #guía strings (tidyverse)
+browseURL("https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf") #guia strings (tidyverse)
 
-#Nueva variable de surface (rescatar mt2 en la descripción)
+#Nueva variable de surface (rescatar mt2 en la descripcion)
 train$description <- str_to_lower(train$description)
-x <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+m2" ##Patron 1 (Area en la descripción M2)
+x <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+m2" ##Patron 1 (Area en la descripcion M2)
 train =train %>% mutate(new_surface = str_extract(string = train$description, pattern = x ))
 table(train$new_surface)
 y <- "[:space:]+[:digit:]+[:space:]+metros" ##Patron 2
@@ -62,10 +65,10 @@ train =train %>% mutate(new_surface =
 sum(table(train$new_surface)) ##Rescata 21722 obs con los tres patrones
 
 
-####Creación de Variables de la columna description (Mínimo 2)
+####Creacion de Variables de la columna description (Minimo 2)
 
 ##Piso
-x_1 <- "[:space:]+[:digit:]+[:space:]+piso" ##Patron 1 (Piso - Intuición un piso más alto cuesta más)
+x_1 <- "[:space:]+[:digit:]+[:space:]+piso" ##Patron 1 (Piso - Intuicion un piso mas alto cuesta mas)
 train =train %>% mutate(piso = str_extract(string = train$description, pattern = x_1 ))
 table(train$piso)
 y_1 <- "[:space:]+[:digit:]+piso" ##Patron 2
@@ -94,7 +97,7 @@ db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espacia
 leaflet() %>% addTiles() %>% addCircles(data=db)
 class(db)
 
-##Caja de coordenada que contiene el polígono de Chapinero - Bogotá
+##Caja de coordenada que contiene el poligono de Chapinero - Bogotá
 chapinero <- getbb(place_name = "UPZ Chapinero, Bogota", 
                    featuretype = "boundary:administrative", 
                    format_out = "sf_polygon") %>% .$multipolygon
@@ -164,14 +167,16 @@ ban_pob = opq(bbox = st_bbox(poblado)) %>%
 osm_ban_pob<- ban_pob %>% osmdata_sf() #lista de elementos (points, lines, poligonos)
 bancos_poblado <- osm_ban_pob$osm_points %>% select(osm_id,amenity)  #points
 
-##Inspección gráfica
+##Inspeccion grafica
+library(sf)
+
 leaflet() %>% addTiles() %>% 
   addCircleMarkers(data=db , col="red", weight=2)%>% #datos
   addPolygons(data=parques_chapinero , col="green") %>%  #parques
   addCircles(data=bares_chapinero , col="blue") %>%  #bares
   addCircles(data=bancos_chapinero , col="black" , weight=2)%>% # bancos
   addCircles(data=estaciones_chapinero , col="yellow") %>%   #estaciones de bus
-  addPolygons(data=parques_pob , col="green") %>%  #parques
+  addPolygons(data=parques_poblado , col="green") %>%  #parques
   addCircles(data=bares_poblado , col="blue") %>%  #bares
   addCircles(data=bancos_poblado , col="black" , weight=2)%>% # bancos
   addCircles(data=estaciones_poblado , col="yellow")  #estaciones de bus
@@ -183,14 +188,14 @@ Medellin_mzn<- Antioquia_mzn[Antioquia_mzn$MPIO_CCDGO == "05001", ]
 class(Medellin_mzn)
 ######Nota: Deje la ruta de desacargas porque no me deja vincularlo el shp file de nuestra carpeta de github
 
-#Creación de variables OSM 
+#Creacion de variables OSM 
 
 ##Afinar las transformaciones
 st_crs(Bogota_mzn) == st_crs(train_chapinero)
 st_crs(Medellin_mzn) == st_crs(train_poblado)
 #Esto lo que hace es recuperar el sistema de referencia de coordenadas del objeto train_chapinero y del objeto train_poblado
 
-##Unir dos conjuntos de datos basados en la geometría
+##Unir dos conjuntos de datos basados en la geometria
 housing_chapinero <- st_join(x=train_chapinero , y=Bogota_mzn) #Validación se mantienen las 15615 obs
 housing_poblado <- st_join(x=train_poblado , y=Medellin_mzn) #Validación se mantienen las 1677 obs
 

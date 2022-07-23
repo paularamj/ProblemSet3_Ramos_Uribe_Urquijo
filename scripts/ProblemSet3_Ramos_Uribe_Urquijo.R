@@ -115,7 +115,7 @@ chapinero <- getbb(place_name = "UPZ Chapinero, Bogota",
 leaflet() %>% addTiles() %>% addPolygons(data=chapinero)
 train_chapinero <- st_crop(db, chapinero)
 
-##Caja de coordenada que contiene el polÃ­gono de Poblado - MedellÃ­n
+##Caja de coordenada que contiene el poligono de Poblado - Medellin
 poblado <- getbb(place_name = "Comuna 14 - El Poblado", 
                  featuretype = "boundary:administrative", 
                  format_out = "sf_polygon") 
@@ -176,6 +176,19 @@ ban_pob = opq(bbox = st_bbox(poblado)) %>%
   add_osm_feature(key = "amenity", value = "bank")
 osm_ban_pob<- ban_pob %>% osmdata_sf() #lista de elementos (points, lines, poligonos)
 bancos_poblado <- osm_ban_pob$osm_points %>% select(osm_id,amenity)  #points
+
+###Variable: Seguridad (Policia)
+#Chapinero
+police_chp = opq(bbox = st_bbox(chapinero)) %>%
+  add_osm_feature(key = "amenity", value = "police")
+osm_police_chap<- police_chp  %>% osmdata_sf() #lista de elementos (points, lines, poligonos)
+police_chapinero <- osm_police_chap$osm_points %>% select(osm_id,amenity) #points
+
+#Poblado
+police_pob = opq(bbox = st_bbox(poblado)) %>%
+  add_osm_feature(key = "amenity", value = "police")
+osm_police_pob<- police_pob %>% osmdata_sf() #lista de elementos (points, lines, poligonos)
+police_poblado <- osm_police_pob$osm_points %>% select(osm_id,amenity)  #points
 
 ##Inspeccion grafica
 library(sf)
@@ -271,6 +284,21 @@ dist_eb_pob
 min_dist_eb_p <- apply(dist_eb_pob , 1 , min)
 min_dist_eb_p
 housing_poblado$dist_estacionbus<- min_dist_eb_p
+
+##Variable: Distancia a estaciones de Policia###
+##Chapinero
+dist_police_chp <- st_distance(x=housing_chapinero, y=police_chapinero)
+dist_police_chp
+min_dist_police_c <- apply(dist_police_chp , 1 , min)
+min_dist_police_c
+housing_chapinero$dist_police <- min_dist_police_c
+
+##Poblado
+dist_police_pob <- st_distance(x=housing_poblado, y=police_poblado)
+dist_police_pob
+min_dist_police_p <- apply(dist_police_pob , 1 , min)
+min_dist_police_p
+housing_poblado$dist_police<- min_dist_police_p
 
 
 #=========================== DATA CLEANING ===========================================#
@@ -914,7 +942,52 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
 
 
 
+########## Revisamos variable BAÑOS #############
 
+#================== Imputar NAs baños con info manzanas del DANE ====================#
+
+## Mediana de la Manzana
+
+# Chapinero
+housing_chapinero = housing_chapinero %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(baños_mediana=median(bathrooms,na.rm=T))
+
+table(is.na(housing_chapinero$bathrooms)) ## Tenemos 2641 NAs
+
+table(is.na(housing_chapinero$bathrooms),
+      is.na(housing_chapinero$baños_mediana)) # logramos recuperar 117
+
+
+# Poblado
+housing_poblado = housing_poblado %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(baños_mediana=median(bathrooms,na.rm=T))
+
+table(is.na(housing_poblado$bathrooms)) ## Tenemos 375 NAs
+
+table(is.na(housing_poblado$bathrooms),
+      is.na(housing_poblado$baños_mediana)) # logramos recuperar 4
+
+#Imputar Medianas Manzanas del # de baños con info de las manzanas del DANE
+
+# Chapinero
+
+
+housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_baños_vf = ifelse(is.na(bathrooms),
+                                 yes = baños_mediana,
+                                 no = bathrooms))
+
+
+
+# Poblado
+
+
+housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_baños_vf = ifelse(is.na(bathrooms),
+                                 yes = baños_mediana,
+                                 no = bathrooms))
 
 
 
@@ -922,13 +995,21 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
 
 #Chapinero
 
-table(is.na(housing_chapinero$new_cuartos_vf))
+table(is.na(housing_chapinero$new_baños_vf))
 
 #Poblado
 
-table(is.na(housing_poblado$new_cuartos_vf))
+table(is.na(housing_poblado$new_baños_vf))
 
-## Ya no tenemos NAs
+#Eliminamos NAs que no pudimos capturar
+
+#Chapinero
+
+housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$new_baños_vf),]
+
+#Poblado
+
+housing_poblado <- housing_poblado[!is.na(housing_poblado$new_baños_vf),]
 
 
 #======================= SELECCION DE VARIABLES ======================#
@@ -938,9 +1019,36 @@ colnames(housing_chapinero)
 colnames(housing_poblado)
 
 #variables: new_piso_vf, new_estrato_vf, new_cuartos_vf, surface_total2, dist_bar, dist_parque, dist_banco,
-          #  dist_estacionbus, price, bathrooms, property_type
+          #  dist_estacionbus, dist_police, price, bathrooms, property_type
+
+#VALIDAMOS QUE NO TENEMOS NAs en las variables seleccionadas
+
+sum(is.na(housing_chapinero$new_piso_vf))
+sum(is.na(housing_chapinero$new_estrato_vf))
+sum(is.na(housing_chapinero$new_cuartos_vf))
+sum(is.na(housing_chapinero$surface_total2))
+sum(is.na(housing_chapinero$dist_bar))
+sum(is.na(housing_chapinero$dist_parque))
+sum(is.na(housing_chapinero$dist_banco))
+sum(is.na(housing_chapinero$dist_estacionbus))
+sum(is.na(housing_chapinero$dist_police))
+sum(is.na(housing_chapinero$price))
+sum(is.na(housing_chapinero$new_baños_vf))
+sum(is.na(housing_chapinero$property_type))
 
 
+sum(is.na(housing_poblado$new_piso_vf))
+sum(is.na(housing_poblado$new_estrato_vf))
+sum(is.na(housing_poblado$new_cuartos_vf))
+sum(is.na(housing_poblado$surface_total2))
+sum(is.na(housing_poblado$dist_bar))
+sum(is.na(housing_poblado$dist_parque))
+sum(is.na(housing_poblado$dist_banco))
+sum(is.na(housing_poblado$dist_estacionbus))
+sum(is.na(housing_poblado$dist_police))
+sum(is.na(housing_poblado$price))
+sum(is.na(housing_poblado$new_baños_vf))
+sum(is.na(housing_poblado$property_type))
 
 
 #####Modelos######

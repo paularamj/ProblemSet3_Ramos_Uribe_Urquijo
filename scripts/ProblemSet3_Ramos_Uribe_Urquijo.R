@@ -1049,11 +1049,30 @@ sum(is.na(housing_poblado$dist_police))
 sum(is.na(housing_poblado$price))
 sum(is.na(housing_poblado$new_banos_vf))
 sum(is.na(housing_poblado$property_type))
+############
 
+############ ---- Estrato as.factor -----############
+housing_chapinero$new_estrato_vf<-ceiling(housing_chapinero$new_estrato_vf)
+housing_chapinero$new_estrato_vf<-as.factor(housing_chapinero$new_estrato_vf)
+
+housing_poblado$new_estrato_vf<-ceiling(housing_poblado$new_estrato_vf)
+housing_poblado$new_estrato_vf<-as.factor(housing_poblado$new_estrato_vf)
 
 #####Modelos######
+p_load(stargazer)
 #Predicción del precio
+modelo_lm<-lm(price ~ new_piso_vf+ new_estrato_vf+ new_cuartos_vf+ surface_total2+
+              dist_bar+ dist_parque+dist_banco+ dist_estacionbus+ dist_police+
+              bathrooms+ property_type, data=housing_chapinero)
 
+stargazer(modelo_lm, type = "text")
+housing_chapinero$predict_lm<-predict(modelo_lm, newdata = housing_chapinero)
+summary(housing_chapinero$predict_lm)
+
+# MAE de entrenamiento
+# ==============================================================================
+mae_ols <- mean(abs((housing_chapinero$predict_lm - housing_chapinero$price)))
+paste("Error (mae) de ols:", mae_ols)
 
 ##Arboles de decisión
 # pload(rpart)

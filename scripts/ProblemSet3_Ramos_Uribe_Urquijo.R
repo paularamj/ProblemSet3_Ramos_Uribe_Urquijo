@@ -28,8 +28,8 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-#setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
 #setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
@@ -198,9 +198,6 @@ library(sf)
 Bogota_mzn<-  st_read("dataPS3/Manzana Bog/MGN_URB_MANZANA.shp")
 Antioquia_mzn <- st_read("dataPS3/Manzana Antioquia/MGN_URB_MANZANA.shp")
 
-#Bogota_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_11_BOGOTA/11_BOGOTA/URBANO/MGN_URB_MANZANA.shp")
-#Antioquia_mzn<- st_read("C:/Users/pau_9/Downloads/MGN2017_05_ANTIOQUIA/05_ANTIOQUIA/URBANO/MGN_URB_MANZANA.shp")
-
 Medellin_mzn<- Antioquia_mzn[Antioquia_mzn$MPIO_CCDGO == "05001", ]
 class(Medellin_mzn)
 
@@ -322,4 +319,32 @@ summary(housing_chapinero$HOLA2)
 nchar(P[1,])
 summary(P)
 str_replace_all(housing_chapinero$new_surface, "a", "-")
+
 #####Modelos######
+#Predicción del precio
+
+
+##Arboles de decisión
+# pload(rpart)
+# 
+# cp_alpha<-seq(from = 0, to = 0.1, length = 10)
+# fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+# ctrl<- trainControl(method = "cv",
+#                     number = 5,
+#                     summaryFunction = fiveStats,
+#                     classProbs = TRUE,
+#                     verbose=FALSE,
+#                     savePredictions = T)
+# View(housing_chapinero)
+# set.seed(123)
+# housing_chapinero$property_type  <- as.factor(housing_chapinero$property_type)
+# tree <- train( price ~ property_type,
+#                data = housing_chapinero,
+#                method = "rpart",
+#                trControl = ctrl,
+#                parms=list(split='Gini'),
+#                #tuneGrid = expand.grid(cp = cp_alpha)#,
+#                tuneLength=200,
+# )
+
+

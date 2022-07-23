@@ -471,6 +471,328 @@ ggplot(housing_poblado, aes(x=surface_total2)) +
 
 summary(housing_poblado$surface_total2)
 
+#================== Crear variable Piso con la información extraida de la descripcion ====================#
+
+## Chapinero
+
+housing_chapinero$new_piso<-str_remove_all(housing_chapinero$piso,"piso")
+housing_chapinero$new_piso<-str_remove_all(housing_chapinero$new_piso, "[\n]")
+
+
+housing_chapinero$new_piso<-as.numeric(housing_chapinero$new_piso)
+
+summary(housing_chapinero$new_piso)
+
+## Poblado
+
+
+housing_poblado$new_piso<-str_remove_all(housing_poblado$piso,"piso")
+housing_poblado$new_piso<-str_remove_all(housing_poblado$new_piso, "[\n]")
+
+
+housing_poblado$new_piso<-as.numeric(housing_poblado$new_piso)
+
+summary(housing_poblado$new_piso)
+
+
+# ===Medianas manzanas cercanas mediana del piso ===##
+
+## load data
+
+colnames(housing_chapinero)
+colnames(housing_poblado)
+
+## Mediana de la Manzana
+
+# Chapinero
+housing_chapinero = housing_chapinero %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(piso_mediana=median(new_piso,na.rm=T))
+
+table(is.na(housing_chapinero$new_piso)) ## Tenemos 12.379 NAs
+
+table(is.na(housing_chapinero$new_piso),
+      is.na(housing_chapinero$piso_mediana)) # logramos recuperar 1.830
+
+
+# Poblado
+housing_poblado = housing_poblado %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(piso_mediana=median(new_piso,na.rm=T))
+
+table(is.na(housing_poblado$new_piso)) ## Tenemos 1.146 NAs
+
+table(is.na(housing_poblado$new_piso),
+      is.na(housing_poblado$piso_mediana)) # logramos recuperar 210
+
+
+#Imputar Medianas Manzanas
+
+# Chapinero
+
+
+housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_piso_vf = ifelse(is.na(new_piso),
+                                 yes = piso_mediana,
+                                 no = new_piso))
+
+
+
+# Poblado
+
+
+housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_piso_vf = ifelse(is.na(new_piso),
+                              yes = piso_mediana,
+                              no = new_piso))
+
+#-----Volvemos a validar NAs
+
+#Chapinero
+
+table(is.na(housing_chapinero$new_piso_vf))
+
+#Poblado
+
+table(is.na(housing_poblado$new_piso_vf))
+
+
+#Eliminamos NAs que no pudimos capturar
+
+#Chapinero
+
+housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$new_piso_vf),]
+
+#Poblado
+
+housing_poblado <- housing_poblado[!is.na(housing_poblado$new_piso_vf),]
+
+## ======Con criterio experto, revisamos los datos que tengan sentido respecto al area total ===== ##
+
+#Chapinero
+
+quantile(housing_chapinero$new_piso_vf, 0.99)
+
+summary(housing_chapinero$new_piso_vf)
+
+#Eliminamos los outliers, quitando los pisos mayores a 13
+
+housing_chapinero<- housing_chapinero %>% 
+  filter(new_piso_vf <=13)
+
+ggplot(housing_chapinero, aes(x=new_piso_vf)) +
+  geom_boxplot(fill= "darkblue", alpha=0.4)
+
+summary(housing_chapinero$new_piso_vf)
+
+
+#Poblado
+
+quantile(housing_poblado$new_piso_vf, 0.99)
+
+summary(housing_poblado$new_piso_vf)
+
+#Eliminamos los outliers, quitando los pisos mayores a 13
+
+housing_poblado<- housing_poblado %>% 
+  filter(new_piso_vf <=26)
+
+ggplot(housing_poblado, aes(x=new_piso_vf)) +
+  geom_boxplot(fill= "darkblue", alpha=0.4)
+
+summary(housing_poblado$new_piso_vf)
+
+#================== Crear variable Estrato con la información extraida de la descripcion ====================#
+
+## Chapinero
+
+housing_chapinero$new_estrato<-str_remove_all(housing_chapinero$estrato,"estrato")
+housing_chapinero$new_estrato<-str_remove_all(housing_chapinero$new_estrato, "[\n]")
+housing_chapinero$new_estrato<-as.numeric(housing_chapinero$new_estrato)
+
+summary(housing_chapinero$new_estrato)
+
+## Poblado
+
+housing_poblado$new_estrato<-str_remove_all(housing_poblado$estrato,"estrato")
+housing_poblado$new_estrato<-str_remove_all(housing_poblado$new_estrato, "[\n]")
+housing_poblado$new_estrato<-as.numeric(housing_poblado$new_estrato)
+
+summary(housing_poblado$new_estrato)
+
+
+##=== Cargar info de CENSO data para imputar estrato ===##
+
+## load data
+mnz_censo = import("http://eduard-martinez.github.io/data/fill-gis-vars/mnz_censo.rds")
+
+## about data
+browseURL("https://eduard-martinez.github.io/teaching/meca-4107/7-censo.txt")
+
+## load data bog
+mgn_bog = import("dataPS3/Censo Bog/CNPV2018_MGN_A2_11.CSV")
+colnames(mgn_bog)
+distinct_all(mgn_bog[,c("UA_CLASE","COD_ENCUESTAS","U_VIVIENDA")]) %>% nrow()
+
+hog_bog = import("dataPS3/Censo Bog/CNPV2018_2HOG_A2_11.CSV")
+colnames(hog_bog)
+distinct_all(hog_bog[,c("UA_CLASE","COD_ENCUESTAS","U_VIVIENDA","H_NROHOG")]) %>% nrow()
+
+viv_bog = import("dataPS3/Censo Bog/CNPV2018_1VIV_A2_11.CSV") 
+colnames(viv_bog)
+distinct_all(viv_bog[,c("COD_ENCUESTAS","U_VIVIENDA")]) %>% nrow()
+
+## join data
+viv_hog_bog = left_join(hog_bog,viv_bog,by=c("COD_ENCUESTAS","U_VIVIENDA","UA_CLASE"))
+table(is.na(viv_hog_bog$VA1_ESTRATO))
+
+data_bog = left_join(viv_hog_bog,mgn_bog,by=c("UA_CLASE","COD_ENCUESTAS","U_VIVIENDA"))
+table(is.na(data_bog$VA1_ESTRATO))
+
+## select vars
+H_NRO_CUARTOS = "Número de cuartos en total"
+HA_TOT_PER = "Total personas en el hogar"
+V_TOT_HOG = "Total de hogares en la vivienda"
+VA1_ESTRATO = "Estrato de la vivienda (según servicio de energía)"
+COD_DANE_ANM = "Codigo DANE de manzana"
+
+db_bog = data_bog %>% select(COD_DANE_ANM,H_NRO_CUARTOS,HA_TOT_PER,V_TOT_HOG,VA1_ESTRATO)
+
+## summary data
+df_bog = db_bog %>%
+  group_by(COD_DANE_ANM) %>% 
+  summarise(med_H_NRO_CUARTOS=median(H_NRO_CUARTOS,na.rm=T), 
+            sum_HA_TOT_PER=sum(HA_TOT_PER,na.rm=T), 
+            med_V_TOT_HOG=median(V_TOT_HOG,na.rm=T),
+            med_VA1_ESTRATO=median(VA1_ESTRATO,na.rm=T))
+
+## export data
+export(df_bog,"dataPS3/Censo Bog/mnz_censo_bog.rds")
+
+
+## Join
+colnames(df_bog)
+colnames(housing_chapinero)
+
+housing_chapinero = left_join(housing_chapinero,df_bog,by=c("COD_DANE_ANM"))
+colnames(house_censo)
+
+
+
+
+## Calcular Buffers para estrato 
+
+house_buf = st_buffer(housing_chapinero,dist=1000)
+
+leaflet() %>% addTiles() %>% addPolygons(data=house_buf , color="red") %>% addCircles(data=housing_chapinero)
+
+house_buf = st_join(house_buf,house[,"surface_total"])
+
+st_geometry(house_buf) = NULL
+
+house_buf_mean = house_buf %>% group_by(property_id) %>% summarise(surface_new_3=mean(surface_total.y,na.rm=T))
+
+house_mnz = left_join(house_mnz,house_buf_mean,"property_id")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ===Medianas manzanas cercanas mediana del estrato ===##
+
+## load data
+
+colnames(housing_chapinero)
+colnames(housing_poblado)
+
+## Mediana de la Manzana
+
+# Chapinero
+housing_chapinero = housing_chapinero %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(estrato_mediana=median(new_estrato,na.rm=T))
+
+table(is.na(housing_chapinero$new_estrato)) ## Tenemos 11.576 NAs
+
+table(is.na(housing_chapinero$new_estrato),
+      is.na(housing_chapinero$estrato_mediana)) # logramos recuperar 2.329
+
+
+# Poblado
+housing_poblado = housing_poblado %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(estrato_mediana=median(new_estrato,na.rm=T))
+
+table(is.na(housing_poblado$new_estrato)) ## Tenemos 958 NAs
+
+table(is.na(housing_poblado$new_estrato),
+      is.na(housing_poblado$estrato_mediana)) # logramos recuperar 48
+
+
+#Imputar Medianas Manzanas del estrato
+
+# Chapinero
+
+
+housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_estrato_vf = ifelse(is.na(new_estrato),
+                              yes = estrato_mediana,
+                              no = new_estrato))
+
+
+
+# Poblado
+
+
+housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
+  mutate(new_estrato_vf = ifelse(is.na(new_estrato),
+                                 yes = estrato_mediana,
+                                 no = new_estrato))
+
+
+#-----Volvemos a validar NAs
+
+#Chapinero
+
+table(is.na(housing_chapinero$new_estrato_vf))
+
+#Poblado
+
+table(is.na(housing_poblado$new_estrato_vf))
+
+sum(is.na(housing_chapinero$MANZ_CCNCT))
+
+#Eliminamos NAs que no pudimos capturar
+
+#Chapinero
+
+housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$new_piso_vf),]
+
+#Poblado
+
+housing_poblado <- housing_poblado[!is.na(housing_poblado$new_piso_vf),]
+
+
+
+
+
+
+
+
+
 
 
 #####Modelos######

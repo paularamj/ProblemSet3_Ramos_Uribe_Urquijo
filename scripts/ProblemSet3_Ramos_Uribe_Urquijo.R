@@ -29,15 +29,10 @@ p_load(skimr, # summary data
 
 ##############################Cargar los datos#################################
 #setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
-#train<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
-#train<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/train.Rds")
 train<-readRDS("dataPS3/train.Rds")
-
-#test<-readRDS("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
-#test<-readRDS("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo/dataPS3/test.Rds")
 test<-readRDS("dataPS3/test.Rds")
 
 ##########Explorción de los datos########
@@ -50,23 +45,35 @@ table(is.na(train$surface_total))
 browseURL("https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf") #guia strings (tidyverse)
 
 #Nueva variable de surface (rescatar mt2 en la descripcion)
+
 train$description <- str_to_lower(train$description)
-x <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+m2" ##Patron 1 (Area en la descripcion M2)
-train =train %>% mutate(new_surface = str_extract(string = train$description, pattern = x ))
-table(train$new_surface)
-y <- "[:space:]+[:digit:]+[:space:]+metros" ##Patron 2
-train =train %>% mutate(new_surface = 
-                          ifelse(is.na(new_surface)==T, 
-                                 str_extract(string = train$description,
-                                 pattern = y),
-                                 new_surface))
-z <- "[:space:]+[:digit:]+[:space:]+mts" ##Patron 2
-train =train %>% mutate(new_surface = 
-                          ifelse(is.na(new_surface)==T, 
-                                 str_extract(string = train$description,
-                                             pattern = z),
-                                 new_surface))
-sum(table(train$new_surface)) ##Rescata 21722 obs con los tres patrones
+x1 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+metros" 
+x2 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mt2"
+x3 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mts2"
+x4 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+m2" 
+x5 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mt"
+x6 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mts"
+
+y1 <- "[:space:]+[:digit:]+[:space:]+metros" 
+y2 <- "[:space:]+[:digit:]+[:space:]+mt2"
+y3 <- "[:space:]+[:digit:]+[:space:]+mts2"
+y4 <- "[:space:]+[:digit:]+[:space:]+m2" 
+y5 <- "[:space:]+[:digit:]+[:space:]+mt"
+y6 <- "[:space:]+[:digit:]+[:space:]+mts"
+
+z1 <- "[:space:]+[:digit:]+metros" 
+z2 <- "[:space:]+[:digit:]+mt2"
+z3 <- "[:space:]+[:digit:]+mts2"
+z4 <- "[:space:]+[:digit:]+m2" 
+z5 <- "[:space:]+[:digit:]+mt"
+z6 <- "[:space:]+[:digit:]+mts"
+
+train =train %>% mutate(new_surface = str_extract(string = train$description,
+                                 pattern =  paste0(x1,"|",x2,"|",x3,"|",x4,"|",x5,"|",x6,"|",
+                                                   y1,"|",y2,"|",y3,"|",y4,"|",y5,"|",y6,"|",
+                                                   z1,"|",z2,"|",z3,"|",z4,"|",z5,"|",z6)))
+
+sum(table(train$new_surface)) ##Rescata 44732 obs con los tres patrones
 
 
 ####Creacion de Variables de la columna description (Minimo 2)
@@ -75,26 +82,25 @@ sum(table(train$new_surface)) ##Rescata 21722 obs con los tres patrones
 x_1 <- "[:space:]+[:digit:]+[:space:]+piso" ##Patron 1 (Piso - Intuicion un piso mas alto cuesta mas)
 train =train %>% mutate(piso = str_extract(string = train$description, pattern = x_1 ))
 table(train$piso)
-y_1 <- "[:space:]+[:digit:]+piso" ##Patron 2
-z_1 <- "[:space:]++piso+[:space:]+[:digit:]" ##Patron 3
-train =train %>% mutate(piso= 
-                          ifelse(is.na(piso)==T, 
+y_1 <- "[:space:]+[:digit:]+piso"
+z_1 <- "[:space:]+piso+[:space:]+[:digit:]" 
+y_2 <- "piso+[:space:]+[:digit:]"
+z_2 <- "[:space:]+piso+[:space:]+[:digit:]+[:punct]"
+train =train %>% mutate(piso= ifelse(is.na(piso)==T, 
                                  str_extract(string = train$description,
-                                             pattern = y_1),
-                                 piso))
-train =train %>% mutate(piso= 
-                          ifelse(is.na(piso)==T, 
-                                 str_extract(string = train$description,
-                                             pattern = z_1),
-                                             piso))
-sum(table(train$piso)) ##Rescata 15507 obs con los dos patrones
+                                             pattern = paste0(y_1,"|",z_1, "|",y_2,"|",z_2)),piso))
+
+sum(table(train$piso)) ##Rescata 15792 obs con los dos patrones
 
 ##Estrato
-x_1 <- "[:space:]+estrato+[:space:]+[:digit:]" ##Patron 1 (Estrato)
-y_1 <- "[:space:]+estrato+[:space:]+[:space:]+[:digit:]"
-z_1 <- "[:space:]+estrato+[:digit:]"
-train =train %>% mutate(estrato = str_extract(string = train$description, pattern = paste0(x_1,"|", y_1,"|", z_1)))
-sum(table(train$estrato)) ##Solo se recuperan 8828
+w1 <- "[:space:]+estrato+[:space:]+[:digit:]" ##Patron 1 (Estrato)
+w2 <- "[:space:]+estrato+[:space:]+[:space:]+[:digit:]"
+w3 <- "[:space:]+estrato+[:digit:]"
+w4 <- "estrato+[:space:]+[:digit:]"
+
+
+train =train %>% mutate(estrato = str_extract(string = train$description, pattern = paste0(w1,"|", w2,"|", w3,"|",w4)))
+sum(table(train$estrato)) ##Solo se recuperan 9382
 
 ##########Data - Spatial########
 db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
@@ -198,9 +204,6 @@ Antioquia_mzn <- st_read("dataPS3/Manzana Antioquia/MGN_URB_MANZANA.shp")
 Medellin_mzn<- Antioquia_mzn[Antioquia_mzn$MPIO_CCDGO == "05001", ]
 class(Medellin_mzn)
 
-
-######Nota: Deje la ruta de desacargas porque no me deja vincularlo el shp file de nuestra carpeta de github
-
 #Creacion de variables OSM 
 
 ##Afinar las transformaciones
@@ -209,7 +212,7 @@ st_crs(Medellin_mzn) == st_crs(train_poblado)
 #Esto lo que hace es recuperar el sistema de referencia de coordenadas del objeto train_chapinero y del objeto train_poblado
 
 ##Unir dos conjuntos de datos basados en la geometria
-housing_chapinero <- st_join(x=train_chapinero , y=Bogota_mzn) #Validación se mantienen las 15615 obs
+housing_chapinero <- st_join(x=train_chapinero , y=Bogota_mzn) #Validación se mantienen las 15165 obs
 housing_poblado <- st_join(x=train_poblado , y=Medellin_mzn) #Validación se mantienen las 1677 obs
 
 ###Variable: Distancia a bares###
@@ -218,11 +221,11 @@ dist_bar_chp <- st_distance(x=housing_chapinero, y=bares_chapinero)
 dist_bar_chp
 min_dist_c <- apply(dist_bar_chp , 1 , min)
 min_dist
-housing_chapinero$dist_bar <- min_dist
+housing_chapinero$dist_bar <- min_dist_c
 
 ##Poblado
 dist_bar_pob <- st_distance(x=housing_poblado, y=bares_poblado)
-dist_bar
+dist_bar_pob
 min_dist_p <- apply(dist_bar_pob , 1 , min) #distancia mínima a cada bar
 min_dist_p
 housing_poblado$dist_bar <- min_dist_p
@@ -272,13 +275,51 @@ min_dist_eb_p <- apply(dist_eb_pob , 1 , min)
 min_dist_eb_p
 housing_poblado$dist_estacionbus<- min_dist_eb_p
 
+###---- Estadisticas descriptivas y mapas ---###
+summary(housing_chapinero$dist_bar)
+summary(housing_poblado$dist_bar)
+summary(housing_poblado$dist_parque)
+summary(housing_poblado$dist_parque)
+summary(housing_chapinero$dist_banco)
+summary(housing_poblado$dist_banco)
+summary(housing_chapinero$dist_estacionbus)
+summary(housing_poblado$dist_estacionbus)
 
+### --- Mirar si hay NAS  --- ###
+sum(is.na(housing_chapinero$rooms))
+sum(is.na(housing_chapinero$bedrooms))
+sum(is.na(housing_chapinero$bathrooms))
+sum(is.na(housing_chapinero$surface_covered))
+sum(is.na(housing_chapinero$surface_total))
+sum(is.na(housing_chapinero$estrato))
+sum(is.na(housing_chapinero$estrato))
+sum(is.na(housing_chapinero$new_surface))
 
+sum(is.na(train$surface_total))
+sum(is.na(train$surface_covered))
+sum(is.na(train$new_surface))
+class(train$new_surface)
+summary(train$surface_total)
 
-###Estadisticas descriptivas y mapas
+housing_chapinero$HOLA3<-housing_chapinero$new_surface
+housing_chapinero$HOLA4<-housing_chapinero$surface_total
 
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$new_surface,"metros")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mt2")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mts2")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"m2")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mt")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mts")
 
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2, "[\n]")
+housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2, "[ ]")
+housing_chapinero$HOLA2<-str_replace_all(housing_chapinero$HOLA2, ",", ".")
+
+housing_chapinero$HOLA2<-as.numeric(housing_chapinero$HOLA2)
+
+summary(housing_chapinero$HOLA2)
+
+nchar(P[1,])
+summary(P)
+str_replace_all(housing_chapinero$new_surface, "a", "-")
 #####Modelos######
-
-
-

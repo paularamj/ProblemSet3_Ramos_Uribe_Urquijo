@@ -29,8 +29,8 @@ p_load(skimr, # summary data
 
 ##############################Cargar los datos#################################
 #setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
@@ -365,7 +365,7 @@ housing_poblado$new_surface_2<-as.numeric(housing_poblado$new_surface_2)
 summary(housing_poblado$new_surface_2)
 
 
-#Imputar Variables rescatadas de la descripción a surface_total
+#Imputar Variables rescatadas de la descripci?n a surface_total
 
 # Chapinero
 
@@ -510,7 +510,7 @@ summary(housing_poblado$surface_total2)
 
 ########## Revisamos variable PISO #############
 
-#================== Crear variable Piso con la información extraida de la descripcion ====================#
+#================== Crear variable Piso con la informaci?n extraida de la descripcion ====================#
 
 ## Chapinero
 
@@ -644,7 +644,7 @@ summary(housing_poblado$new_piso_vf)
 
 ########## Revisamos variable ESTRATO #############
 
-#================== Crear variable Estrato con la información extraida de la descripcion ====================#
+#================== Crear variable Estrato con la informaci?n extraida de la descripcion ====================#
 
 ## Chapinero
 
@@ -662,7 +662,7 @@ housing_poblado$new_estrato<-as.numeric(housing_poblado$new_estrato)
 
 summary(housing_poblado$new_estrato)
 
-### Decidimos realizar la imputación con la info del CENSO del DANE
+### Decidimos realizar la imputaci?n con la info del CENSO del DANE
 
 ##=== Cargar info de CENSO data para imputar estrato ===##
 
@@ -695,10 +695,10 @@ data_bog = left_join(viv_hog_bog,mgn_bog,by=c("UA_CLASE","COD_ENCUESTAS","U_VIVI
 table(is.na(data_bog$VA1_ESTRATO))
 
 ## select vars
-H_NRO_CUARTOS = "Número de cuartos en total"
+H_NRO_CUARTOS = "N?mero de cuartos en total"
 HA_TOT_PER = "Total personas en el hogar"
 V_TOT_HOG = "Total de hogares en la vivienda"
-VA1_ESTRATO = "Estrato de la vivienda (según servicio de energía)"
+VA1_ESTRATO = "Estrato de la vivienda (seg?n servicio de energ?a)"
 COD_DANE_ANM = "Codigo DANE de manzana"
 
 db_bog = data_bog %>% select(COD_DANE_ANM,H_NRO_CUARTOS,HA_TOT_PER,V_TOT_HOG,VA1_ESTRATO)
@@ -746,10 +746,10 @@ data_ant = left_join(viv_hog_ant,mgn_ant,by=c("UA_CLASE","COD_ENCUESTAS","U_VIVI
 table(is.na(data_ant$VA1_ESTRATO))
 
 ## select vars
-H_NRO_CUARTOS = "Número de cuartos en total"
+H_NRO_CUARTOS = "N?mero de cuartos en total"
 HA_TOT_PER = "Total personas en el hogar"
 V_TOT_HOG = "Total de hogares en la vivienda"
-VA1_ESTRATO = "Estrato de la vivienda (según servicio de energía)"
+VA1_ESTRATO = "Estrato de la vivienda (seg?n servicio de energ?a)"
 COD_DANE_ANM = "Codigo DANE de manzana"
 
 db_ant = data_ant %>% select(COD_DANE_ANM,H_NRO_CUARTOS,HA_TOT_PER,V_TOT_HOG,VA1_ESTRATO)
@@ -942,41 +942,41 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
 
 
 
-########## Revisamos variable BAÑOS #############
+########## Revisamos variable BA?OS #############
 
-#================== Imputar NAs baños con info manzanas del DANE ====================#
+#================== Imputar NAs ba?os con info manzanas del DANE ====================#
 
 ## Mediana de la Manzana
 
 # Chapinero
 housing_chapinero = housing_chapinero %>%
   group_by(MANZ_CCNCT) %>%
-  mutate(baños_mediana=median(bathrooms,na.rm=T))
+  mutate(banos_mediana=median(bathrooms,na.rm=T))
 
 table(is.na(housing_chapinero$bathrooms)) ## Tenemos 2641 NAs
 
 table(is.na(housing_chapinero$bathrooms),
-      is.na(housing_chapinero$baños_mediana)) # logramos recuperar 117
+      is.na(housing_chapinero$banos_mediana)) # logramos recuperar 117
 
 
 # Poblado
 housing_poblado = housing_poblado %>%
   group_by(MANZ_CCNCT) %>%
-  mutate(baños_mediana=median(bathrooms,na.rm=T))
+  mutate(banos_mediana=median(bathrooms,na.rm=T))
 
 table(is.na(housing_poblado$bathrooms)) ## Tenemos 375 NAs
 
 table(is.na(housing_poblado$bathrooms),
-      is.na(housing_poblado$baños_mediana)) # logramos recuperar 4
+      is.na(housing_poblado$banos_mediana)) # logramos recuperar 4
 
-#Imputar Medianas Manzanas del # de baños con info de las manzanas del DANE
+#Imputar Medianas Manzanas del # de ba?os con info de las manzanas del DANE
 
 # Chapinero
 
 
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
-  mutate(new_baños_vf = ifelse(is.na(bathrooms),
-                                 yes = baños_mediana,
+  mutate(new_banos_vf = ifelse(is.na(bathrooms),
+                                 yes = banos_mediana,
                                  no = bathrooms))
 
 
@@ -985,8 +985,8 @@ housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>%
 
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
-  mutate(new_baños_vf = ifelse(is.na(bathrooms),
-                                 yes = baños_mediana,
+  mutate(new_banos_vf = ifelse(is.na(bathrooms),
+                                 yes = banos_mediana,
                                  no = bathrooms))
 
 
@@ -995,21 +995,21 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
 
 #Chapinero
 
-table(is.na(housing_chapinero$new_baños_vf))
+table(is.na(housing_chapinero$new_banos_vf))
 
 #Poblado
 
-table(is.na(housing_poblado$new_baños_vf))
+table(is.na(housing_poblado$new_banos_vf))
 
 #Eliminamos NAs que no pudimos capturar
 
 #Chapinero
 
-housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$new_baños_vf),]
+housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$new_banos_vf),]
 
 #Poblado
 
-housing_poblado <- housing_poblado[!is.na(housing_poblado$new_baños_vf),]
+housing_poblado <- housing_poblado[!is.na(housing_poblado$new_banos_vf),]
 
 
 #======================= SELECCION DE VARIABLES ======================#
@@ -1033,7 +1033,7 @@ sum(is.na(housing_chapinero$dist_banco))
 sum(is.na(housing_chapinero$dist_estacionbus))
 sum(is.na(housing_chapinero$dist_police))
 sum(is.na(housing_chapinero$price))
-sum(is.na(housing_chapinero$new_baños_vf))
+sum(is.na(housing_chapinero$new_banos_vf))
 sum(is.na(housing_chapinero$property_type))
 
 
@@ -1047,7 +1047,7 @@ sum(is.na(housing_poblado$dist_banco))
 sum(is.na(housing_poblado$dist_estacionbus))
 sum(is.na(housing_poblado$dist_police))
 sum(is.na(housing_poblado$price))
-sum(is.na(housing_poblado$new_baños_vf))
+sum(is.na(housing_poblado$new_banos_vf))
 sum(is.na(housing_poblado$property_type))
 
 

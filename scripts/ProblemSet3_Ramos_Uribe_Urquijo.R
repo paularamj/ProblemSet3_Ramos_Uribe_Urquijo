@@ -28,9 +28,9 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
 #setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
@@ -272,53 +272,206 @@ min_dist_eb_p <- apply(dist_eb_pob , 1 , min)
 min_dist_eb_p
 housing_poblado$dist_estacionbus<- min_dist_eb_p
 
-###---- Estadisticas descriptivas y mapas ---###
-summary(housing_chapinero$dist_bar)
-summary(housing_poblado$dist_bar)
-summary(housing_poblado$dist_parque)
-summary(housing_poblado$dist_parque)
-summary(housing_chapinero$dist_banco)
-summary(housing_poblado$dist_banco)
-summary(housing_chapinero$dist_estacionbus)
-summary(housing_poblado$dist_estacionbus)
+# Crear variable new_surface con informacion extraida de la descripcion
 
-### --- Mirar si hay NAS  --- ###
-sum(is.na(housing_chapinero$rooms))
-sum(is.na(housing_chapinero$bedrooms))
-sum(is.na(housing_chapinero$bathrooms))
-sum(is.na(housing_chapinero$surface_covered))
-sum(is.na(housing_chapinero$surface_total))
-sum(is.na(housing_chapinero$estrato))
-sum(is.na(housing_chapinero$estrato))
-sum(is.na(housing_chapinero$new_surface))
+## Chapinero
 
-sum(is.na(train$surface_total))
-sum(is.na(train$surface_covered))
-sum(is.na(train$new_surface))
-class(train$new_surface)
-summary(train$surface_total)
+housing_chapinero$ns<-housing_chapinero$new_surface
+housing_chapinero$st<-housing_chapinero$surface_total
 
-housing_chapinero$HOLA3<-housing_chapinero$new_surface
-housing_chapinero$HOLA4<-housing_chapinero$surface_total
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface,"metros")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2,"mt2")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2,"mts2")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2,"m2")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2,"mt")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2,"mts")
 
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$new_surface,"metros")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mt2")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mts2")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"m2")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mt")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2,"mts")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2, "[\n]")
+housing_chapinero$new_surface_2<-str_remove_all(housing_chapinero$new_surface_2, "[ ]")
+housing_chapinero$new_surface_2<-str_replace_all(housing_chapinero$new_surface_2, ",", ".")
 
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2, "[\n]")
-housing_chapinero$HOLA2<-str_remove_all(housing_chapinero$HOLA2, "[ ]")
-housing_chapinero$HOLA2<-str_replace_all(housing_chapinero$HOLA2, ",", ".")
+#Lidiamos con . y , en la descipcion
 
-housing_chapinero$HOLA2<-as.numeric(housing_chapinero$HOLA2)
+housing_chapinero$new_surface_2<-str_replace_all(housing_chapinero$new_surface_2, "[:digit:]+[.]+[:digit:]+[:digit:]+[:digit:]",
+                                                 str_remove_all(housing_chapinero$new_surface_2, "[.]"))
 
-summary(housing_chapinero$HOLA2)
 
-nchar(P[1,])
-summary(P)
-str_replace_all(housing_chapinero$new_surface, "a", "-")
+
+housing_chapinero$new_surface_2<-as.numeric(housing_chapinero$new_surface_2)
+
+summary(housing_chapinero$new_surface_2)
+
+## Poblado
+
+housing_poblado$ns<-housing_poblado$new_surface
+housing_poblado$st<-housing_poblado$surface_total
+
+#Elimino todos los patrones de letras para poder extraer el numero de metros unicamente
+
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface,"metros")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2,"mt2")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2,"mts2")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2,"m2")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2,"mt")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2,"mts")
+
+#Elimina espacio y caracteres especiales
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2, "[\n]")
+housing_poblado$new_surface_2<-str_remove_all(housing_poblado$new_surface_2, "[ ]")
+housing_poblado$new_surface_2<-str_replace_all(housing_poblado$new_surface_2, ",", ".")
+
+#Lidiamos con . y , en la descipcion
+
+housing_poblado$new_surface_2<-str_replace_all(housing_poblado$new_surface_2, "[:digit:]+[.]+[:digit:]+[:digit:]+[:digit:]",
+                                               str_remove_all(housing_poblado$new_surface_2, "[.]"))
+
+#Convertir en numero
+housing_poblado$new_surface_2<-as.numeric(housing_poblado$new_surface_2)
+
+summary(housing_poblado$new_surface_2)
+
+
+#Imputar Variables rescatadas de la descripciÛn a surface_total
+
+# Chapinero
+
+
+housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
+  mutate(surface_total2 = ifelse(is.na(surface_total),
+                            yes = new_surface_2,
+                            no = surface_total))
+
+
+
+# Poblado
+
+
+housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
+  mutate(surface_total2 = ifelse(is.na(surface_total),
+                                 yes = new_surface_2,
+                                 no = surface_total))
+
+
+
+
+## ===Medianas manzanas cercanas la mediana del area ===##
+
+## load data
+
+colnames(housing_chapinero)
+colnames(housing_poblado)
+
+## Mediana de la Manzana
+
+# Chapinero
+housing_chapinero = housing_chapinero %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(surface_mediana=median(surface_total,na.rm=T))
+
+table(is.na(housing_chapinero$surface_total)) ## Tenemos 11.851 NAs
+
+table(is.na(housing_chapinero$surface_total),
+      is.na(housing_chapinero$surface_mediana)) # logramos recuperar 1.389
+
+
+# Poblado
+housing_poblado = housing_poblado %>%
+  group_by(MANZ_CCNCT) %>%
+  mutate(surface_mediana=median(surface_total,na.rm=T))
+
+table(is.na(housing_poblado$surface_total)) ## Tenemos 925 NAs
+
+table(is.na(housing_poblado$surface_total),
+      is.na(housing_poblado$surface_mediana)) # logramos recuperar 108
+
+
+#Imputar Medianas Manzanas
+
+# Chapinero
+
+
+housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
+  mutate(surface_total2 = ifelse(is.na(surface_total2),
+                                 yes = surface_mediana,
+                                 no = surface_total2))
+
+
+
+# Poblado
+
+
+housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
+  mutate(surface_total2 = ifelse(is.na(surface_total2),
+                                 yes = surface_mediana,
+                                 no = surface_total2))
+
+
+#-----Volvemos a validar NAs
+
+#Chapinero
+
+table(is.na(housing_chapinero$surface_total2))
+
+#Poblado
+
+table(is.na(housing_poblado$surface_total2))
+
+#Eliminamos NAs que no pudimos capturar
+
+#Chapinero
+
+housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$surface_total2),]
+
+#Poblado
+
+housing_poblado <- housing_poblado[!is.na(housing_poblado$surface_total2),]
+
+
+## ======Con criterio experto, revisamos los datos que tengan sentido respecto al area total ===== ##
+
+#Chapinero
+
+quantile(housing_chapinero$surface_total2, 0.9997)
+
+summary(housing_chapinero$surface_total2)
+
+#Eliminamos los outliers, quitando los aptos mayores a 2000
+
+housing_chapinero<- housing_chapinero %>% 
+  filter(surface_total2 <=2000)
+
+#Eliminamos los outliers, esta vez dejando unicamente los aptos con 15 mts2 o mas 
+
+housing_chapinero<- housing_chapinero %>% 
+  filter(surface_total2 >= 15)
+
+ggplot(housing_chapinero, aes(x=surface_total2)) +
+  geom_boxplot(fill= "darkblue", alpha=0.4)
+
+summary(housing_chapinero$surface_total2)
+
+#Poblado
+
+quantile(housing_poblado$surface_total2, 0.99)
+
+summary(housing_poblado$surface_total2)
+
+#Eliminamos los outliers, quitando los aptos mayores a 2000
+
+housing_poblado<- housing_poblado %>% 
+  filter(surface_total2 <=2000)
+
+#Eliminamos los outliers, esta vez dejando unicamente los aptos con 10 mts2 o mas 
+
+housing_poblado<- housing_poblado %>% 
+  filter(surface_total2 >= 15)
+
+ggplot(housing_poblado, aes(x=surface_total2)) +
+  geom_boxplot(fill= "darkblue", alpha=0.4)
+
+summary(housing_poblado$surface_total2)
+
+
 
 #####Modelos######
 #Predicci√≥n del precio

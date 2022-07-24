@@ -29,8 +29,8 @@ p_load(skimr, # summary data
 
 ##############################Cargar los datos#################################
 #setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
@@ -1015,7 +1015,7 @@ housing_chapinero$new_estrato_vf<-as.factor(housing_chapinero$new_estrato_vf)
 housing_poblado$new_estrato_vf<-ceiling(housing_poblado$new_estrato_vf)
 housing_poblado$new_estrato_vf<-as.factor(housing_poblado$new_estrato_vf)
 
-############ ---- Baños como valor  -----############
+############ ---- Ba?os como valor  -----############
 housing_chapinero$new_banos_vf<-ceiling(housing_chapinero$new_banos_vf)
 housing_poblado$new_banos_vf<-ceiling(housing_poblado$new_banos_vf)
 
@@ -1025,7 +1025,7 @@ table(housing_chapinero$property_type)
 housing_chapinero$apto<-ifelse(housing_chapinero$property_type=="Apartamento",1,0 )
 housing_chapinero$apto<-as.factor(housing_chapinero$apto)
 
-housing_poblado$apto<-as.factor(housing_poblado$apto)
+
 table(housing_poblado$apto)
 housing_poblado$apto<-ifelse(housing_poblado$property_type=="Apartamento",1,0 )
 housing_poblado$apto<-as.factor(housing_poblado$apto)
@@ -1531,9 +1531,9 @@ arbol1_chap <- rpart(
   formula = price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
                     surface_total2 + dist_bar + dist_parque +
                     dist_banco + dist_estacionbus +dist_police +
-                    new_banos_vf + apto, # Ecuación var dependiente vs. independientes
+                    new_banos_vf + apto, # Ecuaci?n var dependiente vs. independientes
   data    = final_chap, # Dataset
-  method  = "anova" # Anova para especificar que es un arbol de regresión
+  method  = "anova" # Anova para especificar que es un arbol de regresi?n
 )
 
 rpart.plot(arbol1_chap)
@@ -1545,9 +1545,9 @@ arbol1_pob <- rpart(
   formula = price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
     surface_total2 + dist_bar + dist_parque +
     dist_banco + dist_estacionbus +dist_police +
-    new_banos_vf + apto, # Ecuación var dependiente vs. independientes
+    new_banos_vf + apto, # Ecuaci?n var dependiente vs. independientes
   data    = final_pob, # Dataset
-  method  = "anova" # Anova para especificar que es un arbol de regresión
+  method  = "anova" # Anova para especificar que es un arbol de regresi?n
 )
 
 rpart.plot(arbol1_pob)

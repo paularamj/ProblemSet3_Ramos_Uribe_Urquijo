@@ -29,8 +29,8 @@ p_load(skimr, # summary data
 
 ##############################Cargar los datos#################################
 #setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
@@ -1015,13 +1015,20 @@ housing_chapinero$new_estrato_vf<-as.factor(housing_chapinero$new_estrato_vf)
 housing_poblado$new_estrato_vf<-ceiling(housing_poblado$new_estrato_vf)
 housing_poblado$new_estrato_vf<-as.factor(housing_poblado$new_estrato_vf)
 
+############ ---- Ba駉s como valor  -----############
+housing_chapinero$new_banos_vf<-ceiling(housing_chapinero$new_banos_vf)
+housing_poblado$new_banos_vf<-ceiling(housing_poblado$new_banos_vf)
+
 ############ ---- property_type as.factor -----############
 table(BASE$property_type)
 table(housing_chapinero$property_type)
 housing_chapinero$apto<-ifelse(housing_chapinero$property_type=="Apartamento",1,0 )
 housing_chapinero$apto<-as.factor(housing_chapinero$apto)
+
 housing_poblado$apto<-as.factor(housing_poblado$apto)
-table(housing_chapinero$apto)
+table(housing_poblado$apto)
+housing_poblado$apto<-ifelse(housing_poblado$property_type=="Apartamento",1,0 )
+housing_poblado$apto<-as.factor(housing_poblado$apto)
 
 ################################################################################
 ###########################---Separar bases train y test - ######################
@@ -1061,30 +1068,55 @@ ggplot(train_chap_vf, aes(x=price_boxcox))+
 
 
 ####--- OLS Chapinero ----########
-modelo_lm<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
+modelo_lm_chap<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                            +surface_total2+dist_bar+dist_parque+dist_banco
                            +dist_estacionbus+dist_police+new_banos_vf
                            + apto, data=train_chap_vf)
 
-stargazer(modelo_lm, type = "text")
-train_chap_vf$predict_lm<-(predict(modelo_lm, newdata = train_chap_vf))^2
+stargazer(modelo_lm_chap, type = "text")
+train_chap_vf$predict_lm<-(predict(modelo_lm_chap, newdata = train_chap_vf))^2
 summary(train_chap_vf$predict_lm)
 
 # MSE de entrenamiento
 # ==============================================================================
-mse_ols <- mean((train_chap_vf$predict_lm - train_chap_vf$price)^2)
-paste("Error (mse) de ols:", mse_ols)
+mse_ols_chap <- mean((train_chap_vf$predict_lm - train_chap_vf$price)^2)
+paste("Error (mse) de ols:", mse_ols_chap)
 # MAE de entrenamiento
 # ==============================================================================
-mae_ols <- mean(abs((train_chap_vf$predict_lm - train_chap_vf$price)))
-paste("Error (mae) de ols:", mae_ols)
-mean(train_chap_vf$price)-mae_ols #el error entre medias es de 33989
+mae_ols_chap <- mean(abs((train_chap_vf$predict_lm - train_chap_vf$price)))
+paste("Error (mae) de ols:", mae_ols_chap)
+mean(train_chap_vf$price)-mae_ols_chap #el error entre medias es de 33989
 
 ggplot(train_chap_vf, aes(x=predict_lm))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 ggplot(train_chap_vf, aes(x=price))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 
+
+####--- OLS Poblado----########
+modelo_lm_pob<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
+              +surface_total2+dist_bar+dist_parque+dist_banco
+              +dist_estacionbus+dist_police+new_banos_vf
+              + apto, data=train_pob_vf)
+
+stargazer(modelo_lm_pob, type = "text")
+train_pob_vf$predict_lm<-(predict(modelo_lm_pob, newdata = train_pob_vf))^2
+summary(train_pob_vf$predict_lm)
+
+# MSE de entrenamiento
+# ==============================================================================
+mse_ols_pob <- mean((train_pob_vf$predict_lm - train_pob_vf$price)^2)
+paste("Error (mse) de ols:", mse_ols_pob)
+# MAE de entrenamiento
+# ==============================================================================
+mae_ols_pob <- mean(abs((train_pob_vf$predict_lm - train_pob_vf$price)))
+paste("Error (mae) de ols:", mae_ols_pob)
+mean(train_pob_vf$price)-mae_ols_pob 
+
+ggplot(train_pob_vf, aes(x=predict_lm))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+ggplot(train_pob_vf, aes(x=price))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
 
 ###########################################################################################
 ################# -----Ridge y Lasso--------- #############################################
@@ -1094,6 +1126,8 @@ ggplot(train_chap_vf, aes(x=price))+
 # ==============================================================================
 p_load(glmnet)
 p_load(pls)
+
+#### CHAPINERO ###
 
 # Matrices de entrenamiento y test
 # ==============================================================================
@@ -1119,7 +1153,37 @@ x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
 
 y_train <- train_chap_vf$price
 
+#### POBLADO ###
+
+# Matrices de entrenamiento y test
+# ==============================================================================
+matriz_pob<-as.data.frame(cbind(train_pob_vf$price,train_pob_vf$new_piso_vf,
+                                train_pob_vf$new_estrato_vf,train_pob_vf$new_cuartos_vf,
+                                train_pob_vf$surface_total2, train_pob_vf$dist_bar,
+                                train_pob_vf$dist_parque, train_pob_vf$dist_banco,
+                                train_pob_vf$dist_estacionbus,train_pob_vf$dist_police,
+                                train_pob_vf$new_banos_vf,train_pob_vf$apto))
+
+colnames(matriz_pob)<-c("price","new_piso_vf",
+                         "new_estrato_vf","new_cuartos_vf",
+                         "surface_total2","dist_bar",
+                         "dist_parque","dist_banco",
+                         "dist_estacionbus","dist_police",
+                         "new_banos_vf","apto")
+
+matriz_pob<- as.data.frame(scale(matriz_pob, center = TRUE, scale = TRUE))
+
+x_train_p <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
+                        +surface_total2+dist_bar+dist_parque+dist_banco
+                        +dist_estacionbus+dist_police+new_banos_vf
+                        + apto, data = matriz_pob)[, -1]
+
+y_train_p <- train_pob_vf$price
+
+
 #### ---- Ridge -----######
+
+#CHAPINERO
 
 # Evoluci贸n del error en funci贸n de lambda
 # ==============================================================================
@@ -1163,18 +1227,72 @@ predicciones_train_ridge <- predict(modelo_ridge, newx = x_train)
 
 # MSE de entrenamiento
 # ==============================================================================
-mse_ridge <- mean((predicciones_train_ridge - y_train)^2)
-paste("Error (mse) de ols:", mse_ridge)
+mse_ridge_chap <- mean((predicciones_train_ridge - y_train)^2)
+paste("Error (mse) de ols:", mse_ridge_chap)
 
 # MAE de entrenamiento
 # ==============================================================================
-mae_ridge <- mean(abs(predicciones_train_ridge - y_train))
-paste("Error (mae) de ridge", mae_ridge)
+mae_ridge_chap <- mean(abs(predicciones_train_ridge - y_train))
+paste("Error (mae) de ridge", mae_ridge_chap)
+
+#POBLADO
+
+# Evoluci贸n del error en funci贸n de lambda
+# ==============================================================================
+set.seed(123)
+cv_error_ridge_pob <- cv.glmnet(
+  x      = x_train_p,
+  y      = y_train_p,
+  alpha  = 0,
+  nfolds = 10,
+  type.measure = "mse",
+  standardize  = TRUE
+)
+
+cv_error_ridge_pob
+plot(cv_error_ridge_pob)
+
+# Mayor valor de lambda con el que el test-error no se aleja m谩s de 1sd del m铆nimo.
+paste("Mejor valor de lambda encontrado + 1 desviaci贸n est谩ndar:", cv_error_ridge_pob$lambda.1se)
+
+# Mejor modelo lambda 贸ptimo + 1sd
+modelo_ridge_pob <- glmnet(
+  x           = x_train_p,
+  y           = y_train_p,
+  alpha       = 0,
+  lambda      = cv_error_ridge_pob$lambda.1se,
+  standardize = TRUE
+)
+
+modelo_ridge_pob
+
+# Coeficientes del modelo
+# ==============================================================================
+df_coeficientes_ridge_pob <- coef(modelo_ridge_pob) %>%
+  as.matrix() %>%
+  as_tibble(rownames = "predictor") %>%
+  rename(coeficiente = s0)
+
+# Predicciones de entrenamiento
+# ==============================================================================
+predicciones_train_ridge_pob <- predict(modelo_ridge_pob, newx = x_train_p)
+
+# MSE de entrenamiento
+# ==============================================================================
+mse_ridge_pob <- mean((predicciones_train_ridge_pob - y_train_p)^2)
+paste("Error (mse) de ols:", mse_ridge_pob)
+
+# MAE de entrenamiento
+# ==============================================================================
+mae_ridge_pob <- mean(abs(predicciones_train_ridge_pob - y_train_p))
+paste("Error (mae) de ridge", mae_ridge_pob)
 
 
 #### ---- Lasso -----######
 
-# Creaci贸n y entrenamiento del modelo
+#CHAPINERO
+
+# Creacion y entrenamiento del modelo
 # ==============================================================================
 # Para obtener un ajuste con regularizaci贸n Lasso se indica argumento alpha=1.
 # Si no se especifica valor de lambda, se selecciona un rango autom谩tico.
@@ -1257,83 +1375,189 @@ predicciones_train_lasso <- predict(modelo_lasso, newx = x_train)
 
 # MSE de entrenamiento
 # ==============================================================================
-mse_lasso <- mean((predicciones_train_lasso - y_train)^2)
-paste("Error (mse) de ols:", mse_lasso)
+mse_lasso_chap <- mean((predicciones_train_lasso - y_train)^2)
+paste("Error (mse) de ols:", mse_lasso_chap)
 
 # MAE de entrenamiento
 # ==============================================================================
-mae_lasso <- mean(abs(predicciones_train_lasso - y_train))
-print(paste("Error (mae) de lasso", mae_lasso))
+mae_lasso_chap <- mean(abs(predicciones_train_lasso - y_train))
+print(paste("Error (mae) de lasso", mae_lasso_chap))
 
-###########################################################################################
-###########################################################################################
-###########################################################################################
+#POBLADO
 
-# ##Arboles de decisi贸n
-p_load(rpart)
-# #
-cp_alpha<-seq(from = 0, to = 0.1, length = 10)
-fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
-ctrl<- trainControl(method = "cv",
-                     number = 5,
-                      summaryFunction = fiveStats,
-                     classProbs = TRUE,
-                      verbose=FALSE,
-                      savePredictions = T)
-View(train_chap_vf)
+# Creacion y entrenamiento del modelo
+# ==============================================================================
+# Para obtener un ajuste con regularizaci贸n Lasso se indica argumento alpha=1.
+# Si no se especifica valor de lambda, se selecciona un rango autom谩tico.
+modelo_lasso_pob <- glmnet(
+  x           = x_train_p,
+  y           = y_train_p,
+  alpha       = 1,
+  nlambda     = 100,
+  standardize = TRUE
+)
+
+# Evoluci贸n de los coeficientes en funci贸n de lambda
+# ==============================================================================
+regularizacion_lasso_pob <- modelo_lasso_pob$beta %>% 
+  as.matrix() %>%
+  t() %>% 
+  as_tibble() %>%
+  mutate(lambda = modelo_lasso_pob$lambda)
+
+regularizacion_lasso_pob <- regularizacion_lasso_pob %>%
+  pivot_longer(
+    cols = !lambda, 
+    names_to = "predictor",
+    values_to = "coeficientes"
+  )
+
+regularizacion_lasso_pob %>%
+  ggplot(aes(x = lambda, y = coeficientes, color = predictor)) +
+  geom_line() +
+  scale_x_log10(
+    breaks = trans_breaks("log10", function(x) 10^x),
+    labels = trans_format("log10", math_format(10^.x))
+  ) +
+  labs(title = "Coeficientes del modelo en funcion de la regularizacion") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+# Evolucion del error en funcion de lambda
+# ==============================================================================
 set.seed(123)
+cv_error_lasso_pob <- cv.glmnet(
+  x      = x_train_p,
+  y      = y_train_p,
+  alpha  = 1,
+  nfolds = 10,
+  type.measure = "mse",
+  standardize  = TRUE
+)
 
-# Veamos la cantidad de valores 煤nicos para cada variable categ贸rica y su distribuci贸n
+plot(cv_error_lasso_pob)
+# Mayor valor de lambda con el que el test-error no se aleja m谩s de 1sd del m铆nimo.
+paste("Mejor valor de lambda encontrado + 1 desviaci贸n est谩ndar:", cv_error_lasso_pob$lambda.1se)
+
+# Mejor modelo lambda 贸ptimo + 1sd
+# ==============================================================================
+modelo_lasso_pob <- glmnet(
+  x           = x_train_p,
+  y           = y_train_p,
+  alpha       = 1,
+  lambda      = cv_error_lasso_pob$lambda.1se,
+  standardize = TRUE
+)
+
+# Coeficientes del modelo
+# ==============================================================================
+df_coeficientes_lasso_pob <- coef(modelo_lasso_pob) %>%
+  as.matrix() %>%
+  as_tibble(rownames = "predictor") %>%
+  rename(coeficiente = s0)
+
+df_coeficientes_lasso_pob %>%
+  filter(
+    predictor != "(Intercept)",
+    coeficiente != 0
+  ) 
+
+# Predicciones de entrenamiento
+# ==============================================================================
+predicciones_train_lasso_pob <- predict(modelo_lasso_pob, newx = x_train_p)
+
+# MSE de entrenamiento
+# ==============================================================================
+mse_lasso_pob <- mean((predicciones_train_lasso_pob - y_train_p)^2)
+paste("Error (mse) de ols:", mse_lasso_pob)
+
+# MAE de entrenamiento
+# ==============================================================================
+mae_lasso_pob <- mean(abs(predicciones_train_lasso_pob - y_train_p))
+print(paste("Error (mae) de lasso", mae_lasso_pob))
+
+###########################################################################################
+###########################################################################################
+###########################################################################################
+
+# ##Arboles de decision
+p_load(rpart)
+p_load(rsample)     # data splitting 
+p_load(dplyr)       # data wrangling
+p_load(rpart)       # performing regression trees
+p_load(rpart.plot)  # plotting regression trees
+p_load(ipred)       # bagging
+p_load(caret)       # bagging
+
+
+# Veamos la cantidad de valores unicos para cada variable categorica y su distribucion
+#Chapinero
 glimpse(train_chap_vf)
 
-filtro <- !sapply(train_chap_vf, is.double)
-categoricas <- names(train_chap_vf)[filtro]
 
-for (var in categoricas) {
-  frecuencia <- prop.table(table(train_chap_vf[, var]))
-  len <- nrow(frecuencia)
-  print(paste("Cantidad de valores 煤nicos para la variable", var, "son:", len))
-  frecuencia <- round(100*frecuencia, 1)
-  print(frecuencia)
-}
-
-arbol_chap<-as.data.frame(cbind(train_chap_vf$price,train_chap_vf$new_piso_vf,
-                                 train_chap_vf$new_estrato_vf,train_chap_vf$new_cuartos_vf,
-                                 train_chap_vf$surface_total2, train_chap_vf$dist_bar,
-                                 train_chap_vf$dist_parque, train_chap_vf$dist_banco,
-                                 train_chap_vf$dist_estacionbus,train_chap_vf$dist_police,
-                                 train_chap_vf$new_banos_vf,train_chap_vf$property_type))
-colnames(arbol_chap)<-c("price","new_piso_vf",
-                         "new_estrato_vf","new_cuartos_vf",
-                         "surface_total2","dist_bar",
-                         "dist_parque","dist_banco",
-                         "dist_estacionbus","dist_police",
-                         "new_banos_vf","property_type")
-
-glimpse(arbol_chap)
+final_chap <- train_chap_vf %>% 
+                  select(property_id,price,new_piso_vf,
+                         new_estrato_vf,new_cuartos_vf,
+                         surface_total2,dist_bar,
+                         dist_parque,dist_banco,
+                         dist_estacionbus,dist_police,
+                         new_banos_vf,apto)
 
 
+glimpse(final_chap)
+
+#Poblado
+glimpse(train_pob_vf)
 
 
+final_pob <- train_pob_vf %>% 
+  select(property_id,price,new_piso_vf,
+         new_estrato_vf,new_cuartos_vf,
+         surface_total2,dist_bar,
+         dist_parque,dist_banco,
+         dist_estacionbus,dist_police,
+         new_banos_vf,apto)
 
 
+glimpse(final_pob)
 
-tree <- train(price ~ new_estrato_vf
-               + property_type,
-                 data = train_chap_vf,
-                 method = "rpart",
-                 trControl = ctrl,
-                 parms=list(split='Gini'),
-                 #tuneGrid = expand.grid(cp = cp_alpha)#,
-                 tuneLength=200,
-  )
 
 
 
 # Creamos el primer modelo
-modelo1 <- decision_tree() %>%
-  set_engine("rpart") %>%
-  set_mode("classification")
+
+#Chapinero
+arbol1_chap <- rpart(
+  formula = price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+                    surface_total2 + dist_bar + dist_parque +
+                    dist_banco + dist_estacionbus +dist_police +
+                    new_banos_vf + apto, # Ecuaci髇 var dependiente vs. independientes
+  data    = final_chap, # Dataset
+  method  = "anova" # Anova para especificar que es un arbol de regresi髇
+)
+
+rpart.plot(arbol1_chap)
+
+plotcp(arbol1_chap)
+
+#Poblado
+arbol1_pob <- rpart(
+  formula = price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+    surface_total2 + dist_bar + dist_parque +
+    dist_banco + dist_estacionbus +dist_police +
+    new_banos_vf + apto, # Ecuaci髇 var dependiente vs. independientes
+  data    = final_pob, # Dataset
+  method  = "anova" # Anova para especificar que es un arbol de regresi髇
+)
+
+rpart.plot(arbol1_pob)
+
+plotcp(arbol1_pob)
+
+#Creamos otro arbol 
+
+
+
 
 # Dado que estos modelos son computacionalmente demandantes,
 #vamos a distribuir los c谩lculos en diferentes nucleos de nuestro procesador para acelerar el proceso.

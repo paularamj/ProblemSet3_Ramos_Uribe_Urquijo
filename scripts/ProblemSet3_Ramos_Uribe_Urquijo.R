@@ -28,8 +28,8 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
 #setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
@@ -1009,16 +1009,46 @@ housing_chapinero$new_estrato_vf<-as.factor(housing_chapinero$new_estrato_vf)
 housing_poblado$new_estrato_vf<-ceiling(housing_poblado$new_estrato_vf)
 housing_poblado$new_estrato_vf<-as.factor(housing_poblado$new_estrato_vf)
 
-#####Modelos######
+############ ---- property_type as.factor -----############
+housing_chapinero$property_type<-as.factor(housing_chapinero$property_type)
+housing_poblado$property_type<-as.factor(housing_poblado$property_type)
+
+
+###########################################################################################
+########## --------- Modelos de Predicción de precios ----------- ##########################
+############################################################################################
+
 p_load(stargazer)
-#Predicción del precio
-modelo_lm<-lm(price ~ new_piso_vf+ new_estrato_vf+ new_cuartos_vf+ surface_total2+
-              dist_bar+ dist_parque+dist_banco+ dist_estacionbus+ dist_police+
-              bathrooms+ property_type, data=housing_chapinero)
+p_load(EnvStats)
+
+#### Posibles transformaciones para normalizar la variable precio
+ggplot(housing_chapinero, aes(x=price))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+
+ggplot(housing_chapinero, aes(x=log(price)))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+
+ggplot(housing_chapinero, aes(x=sqrt(price)))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+
+########## Box cox para precios ##########
+lambda_price<-boxcox(housing_chapinero$price, objective.name = "Log-Likelihood", optimize = T)$lambda
+#Transformamos la variable
+housing_chapinero$price_boxcox<-boxcoxTransform(housing_chapinero$price, lambda_price)
+
+ggplot(housing_chapinero, aes(x=price_boxcox))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+
+
+####--- OLS Chapinero ----########
+modelo_lm<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
+                           +surface_total2+dist_bar+dist_parque+dist_banco
+                           +dist_estacionbus+dist_police+new_banos_vf
+                           + property_type, data=housing_chapinero)
 
 stargazer(modelo_lm, type = "text")
 housing_chapinero$predict_lm<-predict(modelo_lm, newdata = housing_chapinero)
-summary(housing_chapinero$predict_lm)
+summary((housing_chapinero$predict_lm)^2)
 
 # MAE de entrenamiento
 # ==============================================================================
@@ -1095,7 +1125,7 @@ st_crs(Medellin_mzn) == st_crs(test_poblado)
 ##Unir dos conjuntos de datos basados en la geometria
 housing_chapinero_test <- st_join(x=test_chapinero , y=Bogota_mzn) #Validación se mantienen las 793 obs
 housing_poblado_test <- st_join(x=test_poblado , y=Medellin_mzn) #Validación se mantienen las 10357 obs
-##Nota: Desde la base original de test es de importante notar que Chapinero-Bog cuenta con muy pocas observaciones 
+##Nota: Desde la base original de test, es importante notar que Chapinero-Bog cuenta con muy pocas observaciones 
 ##comparado con training, mientras que la base de Poblado-med cuenta con muchas más obs que training
 
 

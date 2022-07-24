@@ -28,8 +28,8 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-#setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
 #setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
@@ -107,7 +107,7 @@ db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espacia
 leaflet() %>% addTiles() %>% addCircles(data=db)
 class(db)
 
-##Caja de coordenada que contiene el poligono de Chapinero - Bogotá
+##Caja de coordenadas que contiene el poligono de Chapinero - Bogotá
 chapinero <- getbb(place_name = "UPZ Chapinero, Bogota", 
                    featuretype = "boundary:administrative", 
                    format_out = "sf_polygon") %>% .$multipolygon
@@ -115,7 +115,7 @@ chapinero <- getbb(place_name = "UPZ Chapinero, Bogota",
 leaflet() %>% addTiles() %>% addPolygons(data=chapinero)
 train_chapinero <- st_crop(db, chapinero)
 
-##Caja de coordenada que contiene el poligono de Poblado - Medellin
+##Caja de coordenadas que contiene el poligono de Poblado - Medellin
 poblado <- getbb(place_name = "Comuna 14 - El Poblado", 
                  featuretype = "boundary:administrative", 
                  format_out = "sf_polygon") 
@@ -329,8 +329,6 @@ housing_chapinero$new_surface_2<-str_replace_all(housing_chapinero$new_surface_2
 housing_chapinero$new_surface_2<-str_replace_all(housing_chapinero$new_surface_2, "[:digit:]+[.]+[:digit:]+[:digit:]+[:digit:]",
                                                  str_remove_all(housing_chapinero$new_surface_2, "[.]"))
 
-
-
 housing_chapinero$new_surface_2<-as.numeric(housing_chapinero$new_surface_2)
 
 summary(housing_chapinero$new_surface_2)
@@ -369,24 +367,17 @@ summary(housing_poblado$new_surface_2)
 
 # Chapinero
 
-
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
   mutate(surface_total2 = ifelse(is.na(surface_total),
                             yes = new_surface_2,
                             no = surface_total))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(surface_total2 = ifelse(is.na(surface_total),
                                  yes = new_surface_2,
                                  no = surface_total))
-
-
-
 
 ## ===Medianas manzanas cercanas la mediana del area ===##
 
@@ -407,7 +398,6 @@ table(is.na(housing_chapinero$surface_total)) ## Tenemos 11.851 NAs
 table(is.na(housing_chapinero$surface_total),
       is.na(housing_chapinero$surface_mediana)) # logramos recuperar 1.389
 
-
 # Poblado
 housing_poblado = housing_poblado %>%
   group_by(MANZ_CCNCT) %>%
@@ -423,22 +413,17 @@ table(is.na(housing_poblado$surface_total),
 
 # Chapinero
 
-
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
   mutate(surface_total2 = ifelse(is.na(surface_total2),
                                  yes = surface_mediana,
                                  no = surface_total2))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(surface_total2 = ifelse(is.na(surface_total2),
                                  yes = surface_mediana,
                                  no = surface_total2))
-
 
 #-----Volvemos a validar NAs
 
@@ -459,7 +444,6 @@ housing_chapinero <- housing_chapinero[!is.na(housing_chapinero$surface_total2),
 #Poblado
 
 housing_poblado <- housing_poblado[!is.na(housing_poblado$surface_total2),]
-
 
 ## ======Con criterio experto, revisamos los datos que tengan sentido respecto al area total ===== ##
 
@@ -506,8 +490,6 @@ ggplot(housing_poblado, aes(x=surface_total2)) +
 summary(housing_poblado$surface_total2)
 
 
-
-
 ########## Revisamos variable PISO #############
 
 #================== Crear variable Piso con la informaci?n extraida de la descripcion ====================#
@@ -517,22 +499,18 @@ summary(housing_poblado$surface_total2)
 housing_chapinero$new_piso<-str_remove_all(housing_chapinero$piso,"piso")
 housing_chapinero$new_piso<-str_remove_all(housing_chapinero$new_piso, "[\n]")
 
-
 housing_chapinero$new_piso<-as.numeric(housing_chapinero$new_piso)
 
 summary(housing_chapinero$new_piso)
 
 ## Poblado
 
-
 housing_poblado$new_piso<-str_remove_all(housing_poblado$piso,"piso")
 housing_poblado$new_piso<-str_remove_all(housing_poblado$new_piso, "[\n]")
-
 
 housing_poblado$new_piso<-as.numeric(housing_poblado$new_piso)
 
 summary(housing_poblado$new_piso)
-
 
 # ===Medianas manzanas cercanas mediana del piso ===##
 
@@ -569,16 +547,12 @@ table(is.na(housing_poblado$new_piso),
 
 # Chapinero
 
-
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_piso_vf = ifelse(is.na(new_piso),
                                  yes = piso_mediana,
                                  no = new_piso))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_piso_vf = ifelse(is.na(new_piso),
@@ -775,7 +749,6 @@ df_ant<-rename(df_ant, MANZ_CCNCT = COD_DANE_ANM)
 housing_poblado = left_join(housing_poblado,df_ant,by=c("MANZ_CCNCT"))
 
 
-
 # ===Medianas manzanas cercanas mediana del estrato ===##
 
 ## load data
@@ -818,9 +791,7 @@ housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>%
                               no = new_estrato))
 
 
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_estrato_vf = ifelse(is.na(new_estrato),
@@ -831,23 +802,17 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
 
 # Chapinero
 
-
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_estrato_vf = ifelse(is.na(new_estrato_vf),
                                  yes = estrato_mediana,
                                  no = new_estrato_vf))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_estrato_vf = ifelse(is.na(new_estrato_vf),
                                  yes = estrato_mediana,
                                  no = new_estrato_vf))
-
-
 
 #-----Volvemos a validar NAs
 
@@ -879,23 +844,17 @@ housing_poblado <- housing_poblado[!is.na(housing_poblado$new_estrato_vf),]
 
 # Chapinero
 
-
 housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_cuartos_vf = ifelse(is.na(rooms),
                                  yes = med_H_NRO_CUARTOS,
                                  no = rooms))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_cuartos_vf = ifelse(is.na(rooms),
                                  yes = med_H_NRO_CUARTOS,
                                  no = rooms))
-
-
 
 ## Mediana de la Manzana
 
@@ -930,8 +889,6 @@ housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>%
                                  yes = rooms_mediana,
                                  no = new_cuartos_vf))
 
-
-
 # Poblado
 
 
@@ -939,7 +896,6 @@ housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>%
   mutate(new_cuartos_vf = ifelse(is.na(new_cuartos_vf),
                                  yes = rooms_mediana,
                                  no = new_cuartos_vf))
-
 
 
 ########## Revisamos variable BA?OS #############
@@ -979,17 +935,12 @@ housing_chapinero = housing_chapinero %>% group_by(MANZ_CCNCT) %>%
                                  yes = banos_mediana,
                                  no = bathrooms))
 
-
-
 # Poblado
-
 
 housing_poblado = housing_poblado %>% group_by(MANZ_CCNCT) %>% 
   mutate(new_banos_vf = ifelse(is.na(bathrooms),
                                  yes = banos_mediana,
                                  no = bathrooms))
-
-
 
 #-----Volvemos a validar NAs
 
@@ -1098,3 +1049,107 @@ paste("Error (mae) de ols:", mae_ols)
 # )
 
 
+###################Covariables en base de datos: Test###########################
+##Verificar el area
+table(is.na(test$surface_covered)) #Más del 80% del área son NAs
+table(is.na(test$surface_total)) #Más del 80% del área son NAs
+##Datos de área en formato texto en la descripción
+#Nueva variable de surface (rescatar mt2 en la descripcion)
+
+test$description <- str_to_lower(test$description)
+#No se necesitan crear los patrones, ya que sirven los mismos creados.
+
+test =test %>% mutate(new_surface = str_extract(string = test$description,
+                                                  pattern =  paste0(x1,"|",x2,"|",x3,"|",x4,"|",x5,"|",x6,"|",
+                                                                    y1,"|",y2,"|",y3,"|",y4,"|",y5,"|",y6,"|",
+                                                                    z1,"|",z2,"|",z3,"|",z4,"|",z5,"|",z6)))
+sum(table(test$new_surface)) ##Rescata 4337 obs con los tres patrones
+
+##Creacion de Variables de la columna description (Minimo 2)
+
+##Piso
+test = test %>% mutate(piso = str_extract(string = test$description, pattern = x_1 ))
+table(test$piso)
+test =test %>% mutate(piso= ifelse(is.na(piso)==T, 
+                                     str_extract(string = test$description,
+                                                 pattern = paste0(y_1,"|",z_1, "|",y_2,"|",z_2)),piso))
+sum(table(test$piso)) ##Rescata 941 obs con los dos patrones
+
+##Estrato
+test =test %>% mutate(estrato = str_extract(string = test$description, 
+                                            pattern = paste0(w1,"|", w2,"|", w3,"|",w4)))
+sum(table(test$estrato)) ##Solo se recuperan 541
+#Convertir como datos espaciales
+db_test<- st_as_sf(x=test,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
+leaflet() %>% addTiles() %>% addCircles(data=db_test)
+class(db_test)
+
+#No es necesario declarar la caja de coordenadas de Chapinero y El poblado
+##Caja de coordenadas que contiene el poligono de Chapinero - Bogotá
+test_chapinero <- st_crop(db_test, chapinero)
+test_poblado <- st_crop (db_test, poblado)
+##Afinar las transformaciones
+st_crs(Bogota_mzn) == st_crs(test_chapinero)
+st_crs(Medellin_mzn) == st_crs(test_poblado)
+
+##Unir dos conjuntos de datos basados en la geometria
+housing_chapinero_test <- st_join(x=test_chapinero , y=Bogota_mzn) #Validación se mantienen las 793 obs
+housing_poblado_test <- st_join(x=test_poblado , y=Medellin_mzn) #Validación se mantienen las 10357 obs
+##Nota: Desde la base original de test es de importante notar que Chapinero-Bog cuenta con muy pocas observaciones 
+##comparado con training, mientras que la base de Poblado-med cuenta con muchas más obs que training
+
+
+###Variable: Distancia a bares###
+##Chapinero
+dist_bar_chpt <- st_distance(x=housing_chapinero_test, y=bares_chapinero)
+min_dist_ct <- apply(dist_bar_chpt , 1 , min)
+housing_chapinero_test$dist_bar <- min_dist_ct
+
+##Poblado
+dist_bar_pobt <- st_distance(x=housing_poblado_test, y=bares_poblado)
+min_dist_pt <- apply(dist_bar_pobt , 1 , min) #distancia mínima a cada bar
+housing_poblado_test$dist_bar <- min_dist_pt
+
+###Variable: Distancia a parques###
+##Chapinero
+dist_pq_chpt <- st_distance(x=housing_chapinero_test, y=parques_chapinero)
+min_dist_p_ct <- apply(dist_pq_chpt , 1 , min)
+housing_chapinero_test$dist_parque <- min_dist_p_ct
+
+##Poblado
+dist_pq_pobt <- st_distance(x=housing_poblado, y=parques_poblado)
+min_dist_p_pt <- apply(dist_pq_pobt , 1 , min)
+housing_poblado_test$dist_parque <- min_dist_p_pt
+
+##Variable: Distancia a bancos###
+##Chapinero
+dist_bc_chpt <- st_distance(x=housing_chapinero_test, y=bancos_chapinero)
+min_dist_b_ct <- apply(dist_bc_chpt , 1 , min)
+housing_chapinero_test$dist_banco <- min_dist_b_ct
+
+##Poblado
+dist_bc_pobt <- st_distance(x=housing_poblado_test, y=parques_poblado)
+min_dist_p_pt <- apply(dist_pq_pobt , 1 , min)
+housing_poblado_test$dist_banco <- min_dist_p_pt
+
+##Variable: Distancia a estaciones de bus###
+##Chapinero
+dist_eb_chpt <- st_distance(x=housing_chapinero_test, y=estaciones_chapinero)
+min_dist_eb_ct <- apply(dist_eb_chpt , 1 , min)
+housing_chapinero_test$dist_estacionbus <- min_dist_eb_ct
+
+##Poblado
+dist_eb_pobt <- st_distance(x=housing_poblado_test, y=estaciones_poblado)
+min_dist_eb_pt <- apply(dist_eb_pobt , 1 , min)
+housing_poblado_test$dist_estacionbus<- min_dist_eb_pt
+
+##Variable: Distancia a estaciones de Policia###
+##Chapinero
+dist_police_chpt <- st_distance(x=housing_chapinero_test, y=police_chapinero)
+min_dist_police_ct <- apply(dist_police_chpt, 1 , min)
+housing_chapinero_test$dist_police <- min_dist_police_ct
+
+##Poblado
+dist_police_pobt <- st_distance(x=housing_poblado_test, y=police_poblado)
+min_dist_police_pt <- apply(dist_police_pobt , 1 , min)
+housing_poblado_test$dist_police<- min_dist_police_pt

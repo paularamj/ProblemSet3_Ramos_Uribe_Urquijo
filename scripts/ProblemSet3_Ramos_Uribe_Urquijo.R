@@ -1083,7 +1083,9 @@ colnames(matriz_chap)<-c("price","new_piso_vf",
                          "dist_parque","dist_banco",
                          "dist_estacionbus","dist_police",
                          "new_banos_vf","property_type")
-  
+
+matriz_chap<- as.data.frame(scale(matriz_chap, center = TRUE, scale = TRUE))
+
 x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                         +surface_total2+dist_bar+dist_parque+dist_banco
                         +dist_estacionbus+dist_police+new_banos_vf
@@ -1232,27 +1234,26 @@ print(paste("Error (mae) de lasso", mae_lasso))
 ###########################################################################################
 
 ##Arboles de decisión
-# pload(rpart)
+pload(rpart)
 # 
-# cp_alpha<-seq(from = 0, to = 0.1, length = 10)
-# fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
-# ctrl<- trainControl(method = "cv",
-#                     number = 5,
-#                     summaryFunction = fiveStats,
-#                     classProbs = TRUE,
-#                     verbose=FALSE,
-#                     savePredictions = T)
-# View(housing_chapinero)
-# set.seed(123)
-# housing_chapinero$property_type  <- as.factor(housing_chapinero$property_type)
-# tree <- train( price ~ property_type,
-#                data = housing_chapinero,
-#                method = "rpart",
-#                trControl = ctrl,
-#                parms=list(split='Gini'),
-#                #tuneGrid = expand.grid(cp = cp_alpha)#,
-#                tuneLength=200,
-# )
+cp_alpha<-seq(from = 0, to = 0.1, length = 10)
+fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+ctrl<- trainControl(method = "cv",
+                    number = 5,
+                     summaryFunction = fiveStats,
+                     classProbs = TRUE,
+                     verbose=FALSE,
+                     savePredictions = T)
+View(housing_chapinero)
+set.seed(123)
+tree <- train( price ~ property_type,
+                data = housing_chapinero,
+                method = "rpart",
+                trControl = ctrl,
+                parms=list(split='Gini'),
+                #tuneGrid = expand.grid(cp = cp_alpha)#,
+                tuneLength=200,
+ )
 
 
 ###################Covariables en base de datos: Test###########################

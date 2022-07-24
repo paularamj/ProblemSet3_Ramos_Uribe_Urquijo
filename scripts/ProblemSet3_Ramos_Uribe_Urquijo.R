@@ -1050,10 +1050,186 @@ stargazer(modelo_lm, type = "text")
 housing_chapinero$predict_lm<-predict(modelo_lm, newdata = housing_chapinero)
 summary((housing_chapinero$predict_lm)^2)
 
+# MSE de entrenamiento
+# ==============================================================================
+mse_ols <- mean((housing_chapinero$predict_lm - housing_chapinero$price)^2)
+paste("Error (mse) de ols:", mse_ols)
 # MAE de entrenamiento
 # ==============================================================================
 mae_ols <- mean(abs((housing_chapinero$predict_lm - housing_chapinero$price)))
 paste("Error (mae) de ols:", mae_ols)
+mean(housing_chapinero$price)-mae_ols #el error entre medias es de 33989
+
+###########################################################################################
+###########################################################################################
+###########################################################################################
+
+# Modelado
+# ==============================================================================
+p_load(glmnet)
+p_load(pls)
+
+# Matrices de entrenamiento y test
+# ==============================================================================
+matriz_chap<-as.data.frame(cbind(housing_chapinero$price,housing_chapinero$new_piso_vf,
+                                 housing_chapinero$new_estrato_vf,housing_chapinero$new_cuartos_vf,
+                                 housing_chapinero$surface_total2, housing_chapinero$dist_bar,
+                                 housing_chapinero$dist_parque, housing_chapinero$dist_banco,
+                                 housing_chapinero$dist_estacionbus,housing_chapinero$dist_police,
+                                 housing_chapinero$new_banos_vf,housing_chapinero$property_type))
+colnames(matriz_chap)<-c("price","new_piso_vf",
+                         "new_estrato_vf","new_cuartos_vf",
+                         "surface_total2","dist_bar",
+                         "dist_parque","dist_banco",
+                         "dist_estacionbus","dist_police",
+                         "new_banos_vf","property_type")
+  
+x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
+                        +surface_total2+dist_bar+dist_parque+dist_banco
+                        +dist_estacionbus+dist_police+new_banos_vf
+                        + property_type, data = matriz_chap)
+
+y_train <- housing_chapinero$price
+
+#### ---- Ridge -----######
+
+# Evolución del error en función de lambda
+# ==============================================================================
+set.seed(123)
+cv_error_ridge <- cv.glmnet(
+  x      = x_train,
+  y      = y_train,
+  alpha  = 0,
+  nfolds = 10,
+  type.measure = "mse",
+  standardize  = TRUE
+)
+
+cv_error_ridge
+plot(cv_error_ridge)
+
+# Mayor valor de lambda con el que el test-error no se aleja más de 1sd del mínimo.
+paste("Mejor valor de lambda encontrado + 1 desviación estándar:", cv_error_ridge$lambda.1se)
+
+# Mejor modelo lambda óptimo + 1sd
+modelo_ridge <- glmnet(
+  x           = x_train,
+  y           = y_train,
+  alpha       = 0,
+  lambda      = cv_error_ridge$lambda.1se,
+  standardize = TRUE
+)
+
+modelo_ridge
+
+# Coeficientes del modelo
+# ==============================================================================
+df_coeficientes_ridge <- coef(modelo_ridge) %>%
+  as.matrix() %>%
+  as_tibble(rownames = "predictor") %>%
+  rename(coeficiente = s0)
+
+# Predicciones de entrenamiento
+# ==============================================================================
+predicciones_train_ridge <- predict(modelo_ridge, newx = x_train)
+
+# MAE de entrenamiento
+# ==============================================================================
+mae_ridge <- mean(abs(predicciones_train_ridge - y_train))
+paste("Error (mae) de ridge", mae_ridge)
+
+
+#### ---- Lasso -----######
+
+# Creación y entrenamiento del modelo
+# ==============================================================================
+# Para obtener un ajuste con regularización Lasso se indica argumento alpha=1.
+# Si no se especifica valor de lambda, se selecciona un rango automático.
+modelo_lasso <- glmnet(
+  x           = x_train,
+  y           = y_train,
+  alpha       = 1,
+  nlambda     = 100,
+  standardize = TRUE
+)
+
+# Evolución de los coeficientes en función de lambda
+# ==============================================================================
+regularizacion_lasso <- modelo_lasso$beta %>% 
+  as.matrix() %>%
+  t() %>% 
+  as_tibble() %>%
+  mutate(lambda = modelo_lasso$lambda)
+
+regularizacion_lasso <- regularizacion_lasso %>%
+  pivot_longer(
+    cols = !lambda, 
+    names_to = "predictor",
+    values_to = "coeficientes"
+  )
+
+regularizacion_lasso %>%
+  ggplot(aes(x = lambda, y = coeficientes, color = predictor)) +
+  geom_line() +
+  scale_x_log10(
+    breaks = trans_breaks("log10", function(x) 10^x),
+    labels = trans_format("log10", math_format(10^.x))
+  ) +
+  labs(title = "Coeficientes del modelo en función de la regularización") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+# Evolución del error en función de lambda
+# ==============================================================================
+set.seed(123)
+cv_error_lasso <- cv.glmnet(
+  x      = x_train,
+  y      = y_train,
+  alpha  = 1,
+  nfolds = 10,
+  type.measure = "mse",
+  standardize  = TRUE
+)
+
+plot(cv_error_lasso)
+# Mayor valor de lambda con el que el test-error no se aleja más de 1sd del mínimo.
+paste("Mejor valor de lambda encontrado + 1 desviación estándar:", cv_error_lasso$lambda.1se)
+
+# Mejor modelo lambda óptimo + 1sd
+# ==============================================================================
+modelo_lasso <- glmnet(
+  x           = x_train,
+  y           = y_train,
+  alpha       = 1,
+  lambda      = cv_error_lasso$lambda.1se,
+  standardize = TRUE
+)
+
+# Coeficientes del modelo
+# ==============================================================================
+df_coeficientes_lasso <- coef(modelo_lasso) %>%
+  as.matrix() %>%
+  as_tibble(rownames = "predictor") %>%
+  rename(coeficiente = s0)
+
+df_coeficientes_lasso %>%
+  filter(
+    predictor != "(Intercept)",
+    coeficiente != 0
+  ) 
+
+# Predicciones de entrenamiento
+# ==============================================================================
+predicciones_train_lasso <- predict(modelo_lasso, newx = x_train)
+
+# MAE de entrenamiento
+# ==============================================================================
+mae_lasso <- mean(abs(predicciones_train_lasso - y_train))
+print(paste("Error (mae) de lasso", mae_lasso))
+
+###########################################################################################
+###########################################################################################
+###########################################################################################
 
 ##Arboles de decisión
 # pload(rpart)

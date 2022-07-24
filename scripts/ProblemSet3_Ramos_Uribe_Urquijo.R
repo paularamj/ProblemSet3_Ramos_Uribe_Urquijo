@@ -1016,9 +1016,12 @@ housing_poblado$new_estrato_vf<-ceiling(housing_poblado$new_estrato_vf)
 housing_poblado$new_estrato_vf<-as.factor(housing_poblado$new_estrato_vf)
 
 ############ ---- property_type as.factor -----############
-housing_chapinero$property_type<-as.factor(housing_chapinero$property_type)
-housing_poblado$property_type<-as.factor(housing_poblado$property_type)
-
+table(BASE$property_type)
+table(housing_chapinero$property_type)
+housing_chapinero$apto<-ifelse(housing_chapinero$property_type=="Apartamento",1,0 )
+housing_chapinero$apto<-as.factor(housing_chapinero$apto)
+housing_poblado$apto<-as.factor(housing_poblado$apto)
+table(housing_chapinero$apto)
 
 ################################################################################
 ###########################---Separar bases train y test - ######################
@@ -1061,7 +1064,7 @@ ggplot(train_chap_vf, aes(x=price_boxcox))+
 modelo_lm<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                            +surface_total2+dist_bar+dist_parque+dist_banco
                            +dist_estacionbus+dist_police+new_banos_vf
-                           + property_type, data=train_chap_vf)
+                           + apto, data=train_chap_vf)
 
 stargazer(modelo_lm, type = "text")
 train_chap_vf$predict_lm<-(predict(modelo_lm, newdata = train_chap_vf))^2
@@ -1099,20 +1102,20 @@ matriz_chap<-as.data.frame(cbind(train_chap_vf$price,train_chap_vf$new_piso_vf,
                                  train_chap_vf$surface_total2, train_chap_vf$dist_bar,
                                  train_chap_vf$dist_parque, train_chap_vf$dist_banco,
                                  train_chap_vf$dist_estacionbus,train_chap_vf$dist_police,
-                                 train_chap_vf$new_banos_vf,train_chap_vf$property_type))
+                                 train_chap_vf$new_banos_vf,train_chap_vf$apto))
 colnames(matriz_chap)<-c("price","new_piso_vf",
                          "new_estrato_vf","new_cuartos_vf",
                          "surface_total2","dist_bar",
                          "dist_parque","dist_banco",
                          "dist_estacionbus","dist_police",
-                         "new_banos_vf","property_type")
+                         "new_banos_vf","apto")
 
 matriz_chap<- as.data.frame(scale(matriz_chap, center = TRUE, scale = TRUE))
 
 x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                         +surface_total2+dist_bar+dist_parque+dist_banco
                         +dist_estacionbus+dist_police+new_banos_vf
-                        + property_type, data = matriz_chap)[, -1]
+                        + apto, data = matriz_chap)[, -1]
 
 y_train <- train_chap_vf$price
 
@@ -1157,6 +1160,11 @@ df_coeficientes_ridge <- coef(modelo_ridge) %>%
 # Predicciones de entrenamiento
 # ==============================================================================
 predicciones_train_ridge <- predict(modelo_ridge, newx = x_train)
+
+# MSE de entrenamiento
+# ==============================================================================
+mse_ridge <- mean((predicciones_train_ridge - y_train)^2)
+paste("Error (mse) de ols:", mse_ridge)
 
 # MAE de entrenamiento
 # ==============================================================================
@@ -1247,6 +1255,11 @@ df_coeficientes_lasso %>%
 # ==============================================================================
 predicciones_train_lasso <- predict(modelo_lasso, newx = x_train)
 
+# MSE de entrenamiento
+# ==============================================================================
+mse_lasso <- mean((predicciones_train_lasso - y_train)^2)
+paste("Error (mse) de ols:", mse_lasso)
+
 # MAE de entrenamiento
 # ==============================================================================
 mae_lasso <- mean(abs(predicciones_train_lasso - y_train))
@@ -1257,24 +1270,81 @@ print(paste("Error (mae) de lasso", mae_lasso))
 ###########################################################################################
 
 # ##Arboles de decisión
-# pload(rpart)
-# # 
-# cp_alpha<-seq(from = 0, to = 0.1, length = 10)
-# fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
-# ctrl<- trainControl(method = "cv",
-#                     number = 5,
-#                      summaryFunction = fiveStats,
-#                      classProbs = TRUE,
-#                      verbose=FALSE,
-#                      savePredictions = T)
-# View(housing_chapinero)
-# set.seed(123)
-# tree <- train( price ~ property_type,
-#                 data = housing_chapinero,
-#                 method = "rpart",
-#                 trControl = ctrl,
-#                 parms=list(split='Gini'),
-#                 #tuneGrid = expand.grid(cp = cp_alpha)#,
-#                 tuneLength=200,
-#  )
+p_load(rpart)
+# #
+cp_alpha<-seq(from = 0, to = 0.1, length = 10)
+fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+ctrl<- trainControl(method = "cv",
+                     number = 5,
+                      summaryFunction = fiveStats,
+                     classProbs = TRUE,
+                      verbose=FALSE,
+                      savePredictions = T)
+View(train_chap_vf)
+set.seed(123)
 
+# Veamos la cantidad de valores únicos para cada variable categórica y su distribución
+glimpse(train_chap_vf)
+
+filtro <- !sapply(train_chap_vf, is.double)
+categoricas <- names(train_chap_vf)[filtro]
+
+for (var in categoricas) {
+  frecuencia <- prop.table(table(train_chap_vf[, var]))
+  len <- nrow(frecuencia)
+  print(paste("Cantidad de valores únicos para la variable", var, "son:", len))
+  frecuencia <- round(100*frecuencia, 1)
+  print(frecuencia)
+}
+
+arbol_chap<-as.data.frame(cbind(train_chap_vf$price,train_chap_vf$new_piso_vf,
+                                 train_chap_vf$new_estrato_vf,train_chap_vf$new_cuartos_vf,
+                                 train_chap_vf$surface_total2, train_chap_vf$dist_bar,
+                                 train_chap_vf$dist_parque, train_chap_vf$dist_banco,
+                                 train_chap_vf$dist_estacionbus,train_chap_vf$dist_police,
+                                 train_chap_vf$new_banos_vf,train_chap_vf$property_type))
+colnames(arbol_chap)<-c("price","new_piso_vf",
+                         "new_estrato_vf","new_cuartos_vf",
+                         "surface_total2","dist_bar",
+                         "dist_parque","dist_banco",
+                         "dist_estacionbus","dist_police",
+                         "new_banos_vf","property_type")
+
+glimpse(arbol_chap)
+
+
+
+
+
+
+
+tree <- train(price ~ new_estrato_vf
+               + property_type,
+                 data = train_chap_vf,
+                 method = "rpart",
+                 trControl = ctrl,
+                 parms=list(split='Gini'),
+                 #tuneGrid = expand.grid(cp = cp_alpha)#,
+                 tuneLength=200,
+  )
+
+
+
+# Creamos el primer modelo
+modelo1 <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+# Dado que estos modelos son computacionalmente demandantes,
+#vamos a distribuir los cálculos en diferentes nucleos de nuestro procesador para acelerar el proceso.
+
+# Identificamos cuántos cores tiene nuestra máquina
+n_cores <- detectCores()
+print(paste("Mi PC tiene", n_cores, "nucleos"))
+
+# Entrenamos el modelo utilizando procesamiento en paralelo
+modelo1_fit <- fit(modelo1, class ~ ., data = train_chap_vf)
+
+
+glimpse(BASE)
+prop.table(table(train_chap_vf$new_estrato))

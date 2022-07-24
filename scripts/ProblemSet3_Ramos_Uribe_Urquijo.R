@@ -1061,7 +1061,7 @@ paste("Error (mae) de ols:", mae_ols)
 mean(housing_chapinero$price)-mae_ols #el error entre medias es de 33989
 
 ###########################################################################################
-###########################################################################################
+################# -----Ridge y Lasso--------- #############################################
 ###########################################################################################
 
 # Modelado
@@ -1087,7 +1087,7 @@ colnames(matriz_chap)<-c("price","new_piso_vf",
 x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                         +surface_total2+dist_bar+dist_parque+dist_banco
                         +dist_estacionbus+dist_police+new_banos_vf
-                        + property_type, data = matriz_chap)
+                        + property_type, data = matriz_chap)[, -1]
 
 y_train <- housing_chapinero$price
 

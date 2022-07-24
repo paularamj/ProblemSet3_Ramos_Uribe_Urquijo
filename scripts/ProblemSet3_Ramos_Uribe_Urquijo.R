@@ -35,18 +35,24 @@ setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
 
+################--- Unir bases----#########################
+train$base <- "Train"
+test$base <- "Test"
+BASE <- bind_rows(train,test)
+
+
 ##########Explorción de los datos########
-skim(train)
+skim(BASE)
 ##Variables con mayor porcentaje de missing values (surface_covered, surface_total)
-table(is.na(train$surface_covered))
-table(is.na(train$surface_total))
+table(is.na(BASE$surface_covered))
+table(is.na(BASE$surface_total))
 ##Datos de área en formato texto en la descripción
 
 browseURL("https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf") #guia strings (tidyverse)
 
 #Nueva variable de surface (rescatar mt2 en la descripcion)
 
-train$description <- str_to_lower(train$description)
+BASE$description <- str_to_lower(BASE$description)
 x1 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+metros" 
 x2 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mt2"
 x3 <- "[:space:]+[:digit:]+[:punct:]+[:digit:]+[:space:]+mts2"
@@ -68,29 +74,29 @@ z4 <- "[:space:]+[:digit:]+m2"
 z5 <- "[:space:]+[:digit:]+mt"
 z6 <- "[:space:]+[:digit:]+mts"
 
-train =train %>% mutate(new_surface = str_extract(string = train$description,
+BASE =BASE %>% mutate(new_surface = str_extract(string = BASE$description,
                                  pattern =  paste0(x1,"|",x2,"|",x3,"|",x4,"|",x5,"|",x6,"|",
                                                    y1,"|",y2,"|",y3,"|",y4,"|",y5,"|",y6,"|",
                                                    z1,"|",z2,"|",z3,"|",z4,"|",z5,"|",z6)))
 
-sum(table(train$new_surface)) ##Rescata 44732 obs con los tres patrones
+sum(table(BASE$new_surface)) ##Rescata 44732 obs con los tres patrones
 
 
 ####Creacion de Variables de la columna description (Minimo 2)
 
 ##Piso
 x_1 <- "[:space:]+[:digit:]+[:space:]+piso" ##Patron 1 (Piso - Intuicion un piso mas alto cuesta mas)
-train =train %>% mutate(piso = str_extract(string = train$description, pattern = x_1 ))
-table(train$piso)
+BASE=BASE %>% mutate(piso = str_extract(string = BASE$description, pattern = x_1 ))
+table(BASE$piso)
 y_1 <- "[:space:]+[:digit:]+piso"
 z_1 <- "[:space:]+piso+[:space:]+[:digit:]" 
 y_2 <- "piso+[:space:]+[:digit:]"
 z_2 <- "[:space:]+piso+[:space:]+[:digit:]+[:punct]"
-train =train %>% mutate(piso= ifelse(is.na(piso)==T, 
-                                 str_extract(string = train$description,
+BASE =BASE %>% mutate(piso= ifelse(is.na(piso)==T, 
+                                 str_extract(string = BASE$description,
                                              pattern = paste0(y_1,"|",z_1, "|",y_2,"|",z_2)),piso))
 
-sum(table(train$piso)) ##Rescata 15792 obs con los dos patrones
+sum(table(BASE$piso)) ##Rescata 15792 obs con los dos patrones
 
 ##Estrato
 w1 <- "[:space:]+estrato+[:space:]+[:digit:]" ##Patron 1 (Estrato)
@@ -99,11 +105,11 @@ w3 <- "[:space:]+estrato+[:digit:]"
 w4 <- "estrato+[:space:]+[:digit:]"
 
 
-train =train %>% mutate(estrato = str_extract(string = train$description, pattern = paste0(w1,"|", w2,"|", w3,"|",w4)))
-sum(table(train$estrato)) ##Solo se recuperan 9382
+BASE =BASE %>% mutate(estrato = str_extract(string = BASE$description, pattern = paste0(w1,"|", w2,"|", w3,"|",w4)))
+sum(table(BASE$estrato)) ##Solo se recuperan 9382
 
 ##########Data - Spatial########
-db<- st_as_sf(x=train,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
+db<- st_as_sf(x=BASE,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
 leaflet() %>% addTiles() %>% addCircles(data=db)
 class(db)
 
@@ -113,14 +119,14 @@ chapinero <- getbb(place_name = "UPZ Chapinero, Bogota",
                    format_out = "sf_polygon") %>% .$multipolygon
 
 leaflet() %>% addTiles() %>% addPolygons(data=chapinero)
-train_chapinero <- st_crop(db, chapinero)
+BASE_chapinero <- st_crop(db, chapinero)
 
 ##Caja de coordenadas que contiene el poligono de Poblado - Medellin
 poblado <- getbb(place_name = "Comuna 14 - El Poblado", 
                  featuretype = "boundary:administrative", 
                  format_out = "sf_polygon") 
 leaflet() %>% addTiles() %>% addPolygons(data=poblado)
-train_poblado <- st_crop (db, poblado)
+BASE_poblado <- st_crop (db, poblado)
 
 ######Variables de OSM######
 available_features() #Escoger features
@@ -217,13 +223,13 @@ class(Medellin_mzn)
 #Creacion de variables OSM 
 
 ##Afinar las transformaciones
-st_crs(Bogota_mzn) == st_crs(train_chapinero)
-st_crs(Medellin_mzn) == st_crs(train_poblado)
-#Esto lo que hace es recuperar el sistema de referencia de coordenadas del objeto train_chapinero y del objeto train_poblado
+st_crs(Bogota_mzn) == st_crs(BASE_chapinero)
+st_crs(Medellin_mzn) == st_crs(BASE_poblado)
+#Esto lo que hace es recuperar el sistema de referencia de coordenadas del objeto BASE_chapinero y del objeto BASE_poblado
 
 ##Unir dos conjuntos de datos basados en la geometria
-housing_chapinero <- st_join(x=train_chapinero , y=Bogota_mzn) #Validación se mantienen las 15165 obs
-housing_poblado <- st_join(x=train_poblado , y=Medellin_mzn) #Validación se mantienen las 1677 obs
+housing_chapinero <- st_join(x=BASE_chapinero , y=Bogota_mzn) #Validación se mantienen las 15165 obs
+housing_poblado <- st_join(x=BASE_poblado , y=Medellin_mzn) #Validación se mantienen las 1677 obs
 
 ###Variable: Distancia a bares###
 ##Chapinero
@@ -1014,6 +1020,17 @@ housing_chapinero$property_type<-as.factor(housing_chapinero$property_type)
 housing_poblado$property_type<-as.factor(housing_poblado$property_type)
 
 
+################################################################################
+###########################---Separar bases train y test - ######################
+################################################################################
+colnames(housing_chapinero)
+
+train_chap_vf <- housing_chapinero %>%  filter(base == "Train") %>%  select(-base)
+test_chap_vf <- housing_chapinero %>%  filter(base == "Test") %>%  select(-base)
+
+train_pob_vf <- housing_poblado %>%  filter(base == "Train") %>%  select(-base)
+test_pob_vf <- housing_poblado %>%  filter(base == "Test") %>%  select(-base)
+
 ###########################################################################################
 ########## --------- Modelos de Predicción de precios ----------- ##########################
 ############################################################################################
@@ -1255,108 +1272,3 @@ print(paste("Error (mae) de lasso", mae_lasso))
 #                 tuneLength=200,
 #  )
 
-
-###################Covariables en base de datos: Test###########################
-##Verificar el area
-table(is.na(test$surface_covered)) #Más del 80% del área son NAs
-table(is.na(test$surface_total)) #Más del 80% del área son NAs
-##Datos de área en formato texto en la descripción
-#Nueva variable de surface (rescatar mt2 en la descripcion)
-
-test$description <- str_to_lower(test$description)
-#No se necesitan crear los patrones, ya que sirven los mismos creados.
-
-test =test %>% mutate(new_surface = str_extract(string = test$description,
-                                                  pattern =  paste0(x1,"|",x2,"|",x3,"|",x4,"|",x5,"|",x6,"|",
-                                                                    y1,"|",y2,"|",y3,"|",y4,"|",y5,"|",y6,"|",
-                                                                    z1,"|",z2,"|",z3,"|",z4,"|",z5,"|",z6)))
-sum(table(test$new_surface)) ##Rescata 4337 obs con los tres patrones
-
-##Creacion de Variables de la columna description (Minimo 2)
-
-##Piso
-test = test %>% mutate(piso = str_extract(string = test$description, pattern = x_1 ))
-table(test$piso)
-test =test %>% mutate(piso= ifelse(is.na(piso)==T, 
-                                     str_extract(string = test$description,
-                                                 pattern = paste0(y_1,"|",z_1, "|",y_2,"|",z_2)),piso))
-sum(table(test$piso)) ##Rescata 941 obs con los dos patrones
-
-##Estrato
-test =test %>% mutate(estrato = str_extract(string = test$description, 
-                                            pattern = paste0(w1,"|", w2,"|", w3,"|",w4)))
-sum(table(test$estrato)) ##Solo se recuperan 541
-#Convertir como datos espaciales
-db_test<- st_as_sf(x=test,coords=c("lon","lat"),crs=4326) ##Lectura de datos espaciales
-leaflet() %>% addTiles() %>% addCircles(data=db_test)
-class(db_test)
-
-#No es necesario declarar la caja de coordenadas de Chapinero y El poblado
-##Caja de coordenadas que contiene el poligono de Chapinero - Bogotá
-test_chapinero <- st_crop(db_test, chapinero)
-test_poblado <- st_crop (db_test, poblado)
-##Afinar las transformaciones
-st_crs(Bogota_mzn) == st_crs(test_chapinero)
-st_crs(Medellin_mzn) == st_crs(test_poblado)
-
-##Unir dos conjuntos de datos basados en la geometria
-housing_chapinero_test <- st_join(x=test_chapinero , y=Bogota_mzn) #Validación se mantienen las 793 obs
-housing_poblado_test <- st_join(x=test_poblado , y=Medellin_mzn) #Validación se mantienen las 10357 obs
-##Nota: Desde la base original de test, es importante notar que Chapinero-Bog cuenta con muy pocas observaciones 
-##comparado con training, mientras que la base de Poblado-med cuenta con muchas más obs que training
-
-
-###Variable: Distancia a bares###
-##Chapinero
-dist_bar_chpt <- st_distance(x=housing_chapinero_test, y=bares_chapinero)
-min_dist_ct <- apply(dist_bar_chpt , 1 , min)
-housing_chapinero_test$dist_bar <- min_dist_ct
-
-##Poblado
-dist_bar_pobt <- st_distance(x=housing_poblado_test, y=bares_poblado)
-min_dist_pt <- apply(dist_bar_pobt , 1 , min) #distancia mínima a cada bar
-housing_poblado_test$dist_bar <- min_dist_pt
-
-###Variable: Distancia a parques###
-##Chapinero
-dist_pq_chpt <- st_distance(x=housing_chapinero_test, y=parques_chapinero)
-min_dist_p_ct <- apply(dist_pq_chpt , 1 , min)
-housing_chapinero_test$dist_parque <- min_dist_p_ct
-
-##Poblado
-dist_pq_pobt <- st_distance(x=housing_poblado, y=parques_poblado)
-min_dist_p_pt <- apply(dist_pq_pobt , 1 , min)
-housing_poblado_test$dist_parque <- min_dist_p_pt
-
-##Variable: Distancia a bancos###
-##Chapinero
-dist_bc_chpt <- st_distance(x=housing_chapinero_test, y=bancos_chapinero)
-min_dist_b_ct <- apply(dist_bc_chpt , 1 , min)
-housing_chapinero_test$dist_banco <- min_dist_b_ct
-
-##Poblado
-dist_bc_pobt <- st_distance(x=housing_poblado_test, y=parques_poblado)
-min_dist_p_pt <- apply(dist_pq_pobt , 1 , min)
-housing_poblado_test$dist_banco <- min_dist_p_pt
-
-##Variable: Distancia a estaciones de bus###
-##Chapinero
-dist_eb_chpt <- st_distance(x=housing_chapinero_test, y=estaciones_chapinero)
-min_dist_eb_ct <- apply(dist_eb_chpt , 1 , min)
-housing_chapinero_test$dist_estacionbus <- min_dist_eb_ct
-
-##Poblado
-dist_eb_pobt <- st_distance(x=housing_poblado_test, y=estaciones_poblado)
-min_dist_eb_pt <- apply(dist_eb_pobt , 1 , min)
-housing_poblado_test$dist_estacionbus<- min_dist_eb_pt
-
-##Variable: Distancia a estaciones de Policia###
-##Chapinero
-dist_police_chpt <- st_distance(x=housing_chapinero_test, y=police_chapinero)
-min_dist_police_ct <- apply(dist_police_chpt, 1 , min)
-housing_chapinero_test$dist_police <- min_dist_police_ct
-
-##Poblado
-dist_police_pobt <- st_distance(x=housing_poblado_test, y=police_poblado)
-min_dist_police_pt <- apply(dist_police_pobt , 1 , min)
-housing_poblado_test$dist_police<- min_dist_police_pt

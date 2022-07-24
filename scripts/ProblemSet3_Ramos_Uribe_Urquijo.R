@@ -1672,7 +1672,7 @@ xgboost_chap <- train(
 )
 
 xgboost_chap$bestTune
-xgboost_chap$results
+xgboost_chap_Results <- xgboost_chap$results
 
 # POBLADO
 # Semilla
@@ -1689,12 +1689,12 @@ grid_price<- expand.grid(nrounds = c(250,500),
                          subsample = c(0.6))
 set.seed(1410)
 
-xgboost_chap <- train(
+xgboost_pob <- train(
   price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
     surface_total2 + dist_bar + dist_parque +
     dist_banco + dist_estacionbus +dist_police +
     new_banos_vf + apto,
-  data = final_chap,
+  data = final_pob,
   method = "xgbTree",
   trControl = ctrl,
   metric = "Sens",
@@ -1702,8 +1702,11 @@ xgboost_chap <- train(
   preProcess = c("center", "scale")
 )
 
-xgboost_chap$bestTune
-xgboost_chap$results
+xgboost_pob$bestTune
+xgboost_Pob_Results <- xgboost_pob$results
+
+
+
 
 mae_xgb_chap<-291622240
 mse_xgb_chap<-(486091477)^2

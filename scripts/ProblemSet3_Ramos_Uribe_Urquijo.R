@@ -1554,21 +1554,123 @@ rpart.plot(arbol1_pob)
 
 plotcp(arbol1_pob)
 
-#Creamos otro arbol 
+############ BAGGING ##############
 
+# CHAPINERO
+# Semilla
+set.seed(123)
 
+# Specify 10-fold cross validation
+ctrl <- trainControl(method = "cv",  number = 10) 
 
+# CV bagged model
+bagged_cv_chap <- train(
+  price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+    surface_total2 + dist_bar + dist_parque +
+    dist_banco + dist_estacionbus +dist_police +
+    new_banos_vf + apto,
+  data = final_chap,
+  method = "treebag",
+  trControl = ctrl,
+  importance = TRUE
+)
 
-# Dado que estos modelos son computacionalmente demandantes,
-#vamos a distribuir los cálculos en diferentes nucleos de nuestro procesador para acelerar el proceso.
+# assess results
+bagged_cv_chap
 
-# Identificamos cuántos cores tiene nuestra máquina
-n_cores <- detectCores()
-print(paste("Mi PC tiene", n_cores, "nucleos"))
+# plot most important variables
+plot(varImp(bagged_cv_chap), 20)  
 
-# Entrenamos el modelo utilizando procesamiento en paralelo
-modelo1_fit <- fit(modelo1, class ~ ., data = train_chap_vf)
+# POBLADO
+# Semilla
+set.seed(123)
 
+# Specify 10-fold cross validation
+ctrl <- trainControl(method = "cv",  number = 10) 
 
-glimpse(BASE)
-prop.table(table(train_chap_vf$new_estrato))
+# CV bagged model
+bagged_cv_pob <- train(
+  price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+    surface_total2 + dist_bar + dist_parque +
+    dist_banco + dist_estacionbus +dist_police +
+    new_banos_vf + apto,
+  data = final_pob,
+  method = "treebag",
+  trControl = ctrl,
+  importance = TRUE
+)
+
+# assess results
+bagged_cv_pob
+
+# plot most important variables
+plot(varImp(bagged_cv_pob), 20)  
+
+############ XGBOOST ##############
+
+#Paquetes
+
+p_load(xgboost)
+p_load(caret)
+
+# CHAPINERO
+# Semilla
+set.seed(123)
+
+require("xgboost")
+
+grid_price<- expand.grid(nrounds = c(250,500),
+                            max_depth = c(4,6,8),
+                            eta = c(0.01,0.3,0.5),
+                            gamma = c(0,1),
+                            min_child_weight = c(10, 25,50),
+                            colsample_bytree = c(0.7),
+                            subsample = c(0.6))
+set.seed(1410)
+
+xgboost_chap <- train(
+  price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+    surface_total2 + dist_bar + dist_parque +
+    dist_banco + dist_estacionbus +dist_police +
+    new_banos_vf + apto,
+  data = final_chap,
+  method = "xgbTree",
+  trControl = ctrl,
+  metric = "Sens",
+  tuneGrid = grid_price,
+  preProcess = c("center", "scale")
+)
+
+xgboost_chap$bestTune
+xgboost_chap$results
+
+# POBLADO
+# Semilla
+set.seed(123)
+
+require("xgboost")
+
+grid_price<- expand.grid(nrounds = c(250,500),
+                         max_depth = c(4,6,8),
+                         eta = c(0.01,0.3,0.5),
+                         gamma = c(0,1),
+                         min_child_weight = c(10, 25,50),
+                         colsample_bytree = c(0.7),
+                         subsample = c(0.6))
+set.seed(1410)
+
+xgboost_chap <- train(
+  price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
+    surface_total2 + dist_bar + dist_parque +
+    dist_banco + dist_estacionbus +dist_police +
+    new_banos_vf + apto,
+  data = final_chap,
+  method = "xgbTree",
+  trControl = ctrl,
+  metric = "Sens",
+  tuneGrid = grid_price,
+  preProcess = c("center", "scale")
+)
+
+xgboost_chap$bestTune
+xgboost_chap$results

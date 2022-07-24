@@ -1039,21 +1039,21 @@ p_load(stargazer)
 p_load(EnvStats)
 
 #### Posibles transformaciones para normalizar la variable precio
-ggplot(housing_chapinero, aes(x=price))+
+ggplot(train_chap_vf, aes(x=price))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 
-ggplot(housing_chapinero, aes(x=log(price)))+
+ggplot(train_chap_vf, aes(x=log(price)))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 
-ggplot(housing_chapinero, aes(x=sqrt(price)))+
+ggplot(train_chap_vf, aes(x=sqrt(price)))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 
 ########## Box cox para precios ##########
-lambda_price<-boxcox(housing_chapinero$price, objective.name = "Log-Likelihood", optimize = T)$lambda
+lambda_price<-boxcox(train_chap_vf$price, objective.name = "Log-Likelihood", optimize = T)$lambda
 #Transformamos la variable
-housing_chapinero$price_boxcox<-boxcoxTransform(housing_chapinero$price, lambda_price)
+train_chap_vf$price_boxcox<-boxcoxTransform(train_chap_vf$price, lambda_price)
 
-ggplot(housing_chapinero, aes(x=price_boxcox))+
+ggplot(train_chap_vf, aes(x=price_boxcox))+
   geom_histogram(fill="darkblue", alpha = 0.4)
 
 
@@ -1061,21 +1061,21 @@ ggplot(housing_chapinero, aes(x=price_boxcox))+
 modelo_lm<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                            +surface_total2+dist_bar+dist_parque+dist_banco
                            +dist_estacionbus+dist_police+new_banos_vf
-                           + property_type, data=housing_chapinero)
+                           + property_type, data=train_chap_vf)
 
 stargazer(modelo_lm, type = "text")
-housing_chapinero$predict_lm<-predict(modelo_lm, newdata = housing_chapinero)
-summary((housing_chapinero$predict_lm)^2)
+train_chap_vf$predict_lm<-predict(modelo_lm, newdata = train_chap_vf)
+summary((train_chap_vf$predict_lm)^2)
 
 # MSE de entrenamiento
 # ==============================================================================
-mse_ols <- mean((housing_chapinero$predict_lm - housing_chapinero$price)^2)
+mse_ols <- mean((train_chap_vf$predict_lm - train_chap_vf$price)^2)
 paste("Error (mse) de ols:", mse_ols)
 # MAE de entrenamiento
 # ==============================================================================
-mae_ols <- mean(abs((housing_chapinero$predict_lm - housing_chapinero$price)))
+mae_ols <- mean(abs((train_chap_vf$predict_lm - train_chap_vf$price)))
 paste("Error (mae) de ols:", mae_ols)
-mean(housing_chapinero$price)-mae_ols #el error entre medias es de 33989
+mean(train_chap_vf$price)-mae_ols #el error entre medias es de 33989
 
 ###########################################################################################
 ################# -----Ridge y Lasso--------- #############################################

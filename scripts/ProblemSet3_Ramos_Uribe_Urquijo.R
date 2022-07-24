@@ -1064,8 +1064,8 @@ modelo_lm<-lm(sqrt(price) ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                            + property_type, data=train_chap_vf)
 
 stargazer(modelo_lm, type = "text")
-train_chap_vf$predict_lm<-predict(modelo_lm, newdata = train_chap_vf)
-summary((train_chap_vf$predict_lm)^2)
+train_chap_vf$predict_lm<-(predict(modelo_lm, newdata = train_chap_vf))^2
+summary(train_chap_vf$predict_lm)
 
 # MSE de entrenamiento
 # ==============================================================================
@@ -1076,6 +1076,12 @@ paste("Error (mse) de ols:", mse_ols)
 mae_ols <- mean(abs((train_chap_vf$predict_lm - train_chap_vf$price)))
 paste("Error (mae) de ols:", mae_ols)
 mean(train_chap_vf$price)-mae_ols #el error entre medias es de 33989
+
+ggplot(train_chap_vf, aes(x=predict_lm))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+ggplot(train_chap_vf, aes(x=price))+
+  geom_histogram(fill="darkblue", alpha = 0.4)
+
 
 ###########################################################################################
 ################# -----Ridge y Lasso--------- #############################################
@@ -1088,12 +1094,12 @@ p_load(pls)
 
 # Matrices de entrenamiento y test
 # ==============================================================================
-matriz_chap<-as.data.frame(cbind(housing_chapinero$price,housing_chapinero$new_piso_vf,
-                                 housing_chapinero$new_estrato_vf,housing_chapinero$new_cuartos_vf,
-                                 housing_chapinero$surface_total2, housing_chapinero$dist_bar,
-                                 housing_chapinero$dist_parque, housing_chapinero$dist_banco,
-                                 housing_chapinero$dist_estacionbus,housing_chapinero$dist_police,
-                                 housing_chapinero$new_banos_vf,housing_chapinero$property_type))
+matriz_chap<-as.data.frame(cbind(train_chap_vf$price,train_chap_vf$new_piso_vf,
+                                 train_chap_vf$new_estrato_vf,train_chap_vf$new_cuartos_vf,
+                                 train_chap_vf$surface_total2, train_chap_vf$dist_bar,
+                                 train_chap_vf$dist_parque, train_chap_vf$dist_banco,
+                                 train_chap_vf$dist_estacionbus,train_chap_vf$dist_police,
+                                 train_chap_vf$new_banos_vf,train_chap_vf$property_type))
 colnames(matriz_chap)<-c("price","new_piso_vf",
                          "new_estrato_vf","new_cuartos_vf",
                          "surface_total2","dist_bar",
@@ -1108,7 +1114,7 @@ x_train <- model.matrix(price ~ new_piso_vf+new_estrato_vf+new_cuartos_vf
                         +dist_estacionbus+dist_police+new_banos_vf
                         + property_type, data = matriz_chap)[, -1]
 
-y_train <- housing_chapinero$price
+y_train <- train_chap_vf$price
 
 #### ---- Ridge -----######
 

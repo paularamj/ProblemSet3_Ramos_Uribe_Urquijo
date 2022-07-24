@@ -1233,27 +1233,27 @@ print(paste("Error (mae) de lasso", mae_lasso))
 ###########################################################################################
 ###########################################################################################
 
-##Arboles de decisión
-pload(rpart)
-# 
-cp_alpha<-seq(from = 0, to = 0.1, length = 10)
-fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
-ctrl<- trainControl(method = "cv",
-                    number = 5,
-                     summaryFunction = fiveStats,
-                     classProbs = TRUE,
-                     verbose=FALSE,
-                     savePredictions = T)
-View(housing_chapinero)
-set.seed(123)
-tree <- train( price ~ property_type,
-                data = housing_chapinero,
-                method = "rpart",
-                trControl = ctrl,
-                parms=list(split='Gini'),
-                #tuneGrid = expand.grid(cp = cp_alpha)#,
-                tuneLength=200,
- )
+# ##Arboles de decisión
+# pload(rpart)
+# # 
+# cp_alpha<-seq(from = 0, to = 0.1, length = 10)
+# fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+# ctrl<- trainControl(method = "cv",
+#                     number = 5,
+#                      summaryFunction = fiveStats,
+#                      classProbs = TRUE,
+#                      verbose=FALSE,
+#                      savePredictions = T)
+# View(housing_chapinero)
+# set.seed(123)
+# tree <- train( price ~ property_type,
+#                 data = housing_chapinero,
+#                 method = "rpart",
+#                 trControl = ctrl,
+#                 parms=list(split='Gini'),
+#                 #tuneGrid = expand.grid(cp = cp_alpha)#,
+#                 tuneLength=200,
+#  )
 
 
 ###################Covariables en base de datos: Test###########################

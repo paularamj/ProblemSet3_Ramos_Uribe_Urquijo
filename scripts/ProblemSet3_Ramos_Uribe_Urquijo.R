@@ -1540,6 +1540,15 @@ rpart.plot(arbol1_chap)
 
 plotcp(arbol1_chap)
 
+######## ERRORES ###########
+yhat_chap <- predict(arbol1_chap, newdata = final_chap)
+actual_chap <- final_chap$price
+plot(yhat_chap, actual_chap)
+abline(0,1)
+
+mse_arbol_chap <- mean((yhat_chap-actual_chap)^2)
+mae_arbol_chap <-mean(abs(yhat_chap-actual_chap))
+######################
 #Poblado
 arbol1_pob <- rpart(
   formula = price ~ new_piso_vf + new_estrato_vf + new_cuartos_vf +
@@ -1553,6 +1562,15 @@ arbol1_pob <- rpart(
 rpart.plot(arbol1_pob)
 
 plotcp(arbol1_pob)
+
+######## ERRORES ###########
+yhat_pob <- predict(arbol1_pob, newdata = final_pob)
+actual_pob <- final_pob$price
+plot(yhat_pob, actual_pob)
+abline(0,1)
+
+mse_arbol_pob <- mean((yhat_pob-actual_pob)^2)
+mae_arbol_pob <-mean(abs(yhat_pob-actual_pob))
 
 ############ BAGGING ##############
 
@@ -1577,6 +1595,11 @@ bagged_cv_chap <- train(
 
 # assess results
 bagged_cv_chap
+#####----MAE---######
+bag_chap<-bagged_cv_chap$results
+mae_bag_chap<-bag_chap$MAE
+#####----MSE---######
+mse_bag_chap<-(bag_chap$RMSE)^2
 
 # plot most important variables
 plot(varImp(bagged_cv_chap), 20)  
@@ -1602,6 +1625,13 @@ bagged_cv_pob <- train(
 
 # assess results
 bagged_cv_pob
+
+#####----MAE---######
+bag_pob<-bagged_cv_pob$results
+mae_bag_pob<-bag_pob$MAE
+#####----MSE---######
+mse_bag_pob<-(bag_pob$RMSE)^2
+
 
 # plot most important variables
 plot(varImp(bagged_cv_pob), 20)  
@@ -1674,3 +1704,55 @@ xgboost_chap <- train(
 
 xgboost_chap$bestTune
 xgboost_chap$results
+
+mae_xgb_chap<-291622240
+mse_xgb_chap<-(486091477)^2
+
+#################################################################################
+########################------Criterios mejor modelo--------####################
+#################################################################################
+
+results_mae<-cbind(mae_ols_chap,mae_ridge_chap,mae_lasso_chap,mae_arbol_chap,mae_bag_chap, mae_xgb_chap)
+results_mse<-cbind(mse_ols_chap,mse_ridge_chap,mse_lasso_chap,mse_arbol_chap,mse_bag_chap, mse_xgb_chap)
+colnames(results)<-c("model_ols","model_ridge","model_lasso", "model_arbol", "model_bag","model_xgb")
+
+
+######### ----- Número y valor de propiedades -----#############################
+
+###---OLS Chapinero---####
+ols_pred_chap<-as.data.frame(cbind(train_chap_vf$property_id, train_chap_vf$price ,train_chap_vf$predict_lm))
+colnames(ols_pred_chap)<-c("property_id","price","predict_lm")
+ols_pred_chap$price<-as.numeric(ols_pred_chap$price)
+ols_pred_chap$predict_lm<-as.numeric(ols_pred_chap$predict_lm)
+ols_pred_chap$dif<-(ols_pred_chap$price - ols_pred_chap$predict_lm)
+
+ols_pred_chap$mayor<-ifelse(ols_pred_chap$predict_lm>=ols_pred_chap$price,1,0)
+ols_pred_chap$menor<-ifelse(ols_pred_chap$predict_lm<ols_pred_chap$price & ols_pred_chap$dif<=40000000
+                       ,1,0)
+ols_pred_chap$compra<-ifelse(ols_pred_chap$mayor==1|ols_pred_chap$menor==1,1,0)
+
+ols_pred_chap <- ols_pred_chap %>%  filter(compra == 1) 
+gasto_ols_chap<-sum(ols_pred_chap$predict_lm)
+compras_chap<-sum(ols_pred_chap$compra)
+
+ratio_ols_chap<-gasto_ols_chap/compras_chap
+
+###---OLS Poblado---####
+ols_pred_pob<-as.data.frame(cbind(train_pob_vf$property_id, train_pob_vf$price ,train_pob_vf$predict_lm))
+colnames(ols_pred_pob)<-c("property_id","price","predict_lm")
+ols_pred_pob$price<-as.numeric(ols_pred_pob$price)
+ols_pred_pob$predict_lm<-as.numeric(ols_pred_pob$predict_lm)
+ols_pred_pob$dif<-(ols_pred_pob$price - ols_pred_pob$predict_lm)
+
+ols_pred_pob$mayor<-ifelse(ols_pred_pob$predict_lm>=ols_pred_pob$price,1,0)
+ols_pred_pob$menor<-ifelse(ols_pred_pob$predict_lm<ols_pred_pob$price & ols_pred_pob$dif<=40000000
+                       ,1,0)
+ols_pred_pob$compra<-ifelse(ols_pred_pob$mayor==1|ols_pred_pob$menor==1,1,0)
+
+ols_pred_pob <- ols_pred_pob %>%  filter(compra == 1) 
+gasto_ols_pob<-sum(ols_pred_pob$predict_lm)
+compras_pob<-sum(ols_pred_pob$compra)
+
+ratio_ols_pob<-gasto_ols_pob/compras_pob
+
+mean(train_pob_vf$price)

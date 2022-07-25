@@ -2012,4 +2012,71 @@ results_pob=results_pob %>% mutate(Ratio =  c(ratio_ols_pob,ratio_ridge_pob,rati
                                                 ratio_arb_pob,ratio_bag_pob, ratio_xgb_pob))
 
 
+##############################################
+
+#Guardar ambiente
+#save.image(file = "C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/scripts/workspace")
+
+
+#Cargar ambiente 
+
+#load("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/scripts/workspace")
+
+############# PREDICCION FINAL PARA CADA UNO ####################
+#Chapinero
+glimpse(test_chap_vf)
+
+
+final_chap_test <- test_chap_vf %>% 
+  select(property_id,price,new_piso_vf,
+         new_estrato_vf,new_cuartos_vf,
+         surface_total2,dist_bar,
+         dist_parque,dist_banco,
+         dist_estacionbus,dist_police,
+         new_banos_vf,apto)
+
+
+glimpse(final_chap_test)
+
+#Poblado
+glimpse(test_pob_vf)
+
+
+final_pob_test <- test_pob_vf %>% 
+  select(property_id,price,new_piso_vf,
+         new_estrato_vf,new_cuartos_vf,
+         surface_total2,dist_bar,
+         dist_parque,dist_banco,
+         dist_estacionbus,dist_police,
+         new_banos_vf,apto)
+
+
+glimpse(final_pob_test)
+
+
+#Chapinero
+
+#---Predicciones
+pred_ols_chap_final<-(predict(modelo_lm_chap, newdata = final_chap_test))^2
+
+
+#Poblado
+
+#---Predicciones
+pred_xgb_pob_final<-predict(xgboost_pob, final_pob_test)
+
+##########Archivo de predicciones
+id_test_property_chap<-final_chap_test$property_id
+
+
+
+Pobre_Pred_test_hogares<-test_hogares$Pobre_predicho_final
+Ing_Pred_test_hogares<-test_hogares$Ing_Pred_test_hogares
+DB_test_hog<-data_frame(id_test_hogares,Pobre_Pred_test_hogares,Ing_Pred_test_hogares)
+summary(DB_test_hog)
+
+setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet2_Ramos_Uribe_Urquijo/document")
+write.csv(DB_test_hog, file = "predictions_ramos_uribe_urquijo_c10_r7.csv")
+
+
 

@@ -1563,8 +1563,6 @@ rpart.plot(arbol1_pob)
 
 plotcp(arbol1_pob)
 
-mse_arbol_pob <- mean((yhat_pob-actual_pob)^2)
-mae_arbol_pob <-mean(abs(yhat_pob-actual_pob))
 
 ######## ERRORES ###########
 yhat_pob <- predict(arbol1_pob, newdata = final_pob)
@@ -2057,26 +2055,36 @@ glimpse(final_pob_test)
 #Chapinero
 
 #---Predicciones
-pred_ols_chap_final<-(predict(modelo_lm_chap, newdata = final_chap_test))^2
+final_chap_test$pred_ols_chap_final<-(predict(modelo_lm_chap, newdata = final_chap_test))^2
 
 
 #Poblado
 
 #---Predicciones
-pred_xgb_pob_final<-predict(xgboost_pob, final_pob_test)
+final_pob_test$pred_xgb_pob_final<-predict(xgboost_pob, final_pob_test)
 
 ##########Archivo de predicciones
+
+setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo/document")
+
+#Chapinero
 id_test_property_chap<-final_chap_test$property_id
+price_pred_chap<-final_chap_test$pred_ols_chap_final
+predicciones_chapinero <- data.frame(id_test_property_chap, price_pred_chap)
+
+write.csv(predicciones_chapinero, file = "predictions_chapinero_ramos_uribe_urquijo.csv")
+
+#Poblado
+id_test_property_pob<-final_pob_test$property_id
+price_pred_pob<-final_pob_test$pred_xgb_pob_final
+predicciones_poblado<-data.frame(id_test_property_pob, price_pred_pob)
+
+write.csv(predicciones_poblado, file = "predictions_poblado_ramos_uribe_urquijo.csv")
 
 
 
-Pobre_Pred_test_hogares<-test_hogares$Pobre_predicho_final
-Ing_Pred_test_hogares<-test_hogares$Ing_Pred_test_hogares
-DB_test_hog<-data_frame(id_test_hogares,Pobre_Pred_test_hogares,Ing_Pred_test_hogares)
-summary(DB_test_hog)
 
-setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet2_Ramos_Uribe_Urquijo/document")
-write.csv(DB_test_hog, file = "predictions_ramos_uribe_urquijo_c10_r7.csv")
+
 
 
 

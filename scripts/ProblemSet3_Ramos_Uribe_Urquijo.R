@@ -1737,6 +1737,12 @@ rownames(results_chap)<-c("modelo_ols_chap","modelo_ridge_chap","modelo_lasso_ch
 results_chap=results_chap %>% mutate(MSE =  c(mse_ols_chap,mse_ridge_chap,mse_lasso_chap,
                                               mse_arbol_chap,mse_bag_chap, mse_xgb_chap))
 
+results_chap$MAE <-(results_chap$MAE)/1000000
+results_chap$RMSE <- sqrt(results_chap$MSE)/1000000
+
+results_chap<- results_chap[,-2]
+
+
 #### -------- MAE y MSE Poblado -------#### 
 results_pob<-as.data.frame(rbind(mae_ols_pob,mae_ridge_pob,mae_lasso_pob,
                                  mae_arbol_pob,mae_bag_pob, mae_xgb_pob))
@@ -1746,6 +1752,9 @@ rownames(results_pob)<-c("modelo_ols_pob","modelo_ridge_pob","modelo_lasso_pob",
 
 results_pob=results_pob %>% mutate(MSE =  c(mse_ols_pob,mse_ridge_pob,mse_lasso_pob,
                                             mse_arbol_pob,mse_bag_pob, mse_xgb_pob))
+results_pob$MAE <-(results_pob$MAE)/1000000
+results_pob$RMSE <- sqrt(results_pob$MSE)/1000000
+results_pob<- results_pob[,-2]
 
 ######### ----- Número y valor de propiedades -----#############################
 
@@ -1999,6 +2008,15 @@ results_chap=results_chap %>% mutate(Compras =  c(compras_ols_chap,compras_ridge
 results_chap=results_chap %>% mutate(Ratio =  c(ratio_ols_chap,ratio_ridge_chap,ratio_lasso_chap,
                                                 ratio_arb_chap,ratio_bag_chap, ratio_xgb_chap))
 
+results_chap$Gasto<- (results_chap$Gasto)/1000000
+results_chap$Ratio<- (results_chap$Ratio)/1000000
+
+results_chap
+
+
+library(xtable)
+xtable(results_chap, caption = "Resultados Modelos Chapinero", digits = 1)
+
 #Poblado
 results_pob=results_pob %>% mutate(Gasto =  c(gasto_ols_pob,gasto_ridge_pob,gasto_lasso_pob,
                                                 gasto_arb_pob,gasto_bag_pob, gasto_xgb_pob))
@@ -2009,6 +2027,16 @@ results_pob=results_pob %>% mutate(Compras =  c(compras_ols_pob,compras_ridge_po
 results_pob=results_pob %>% mutate(Ratio =  c(ratio_ols_pob,ratio_ridge_pob,ratio_lasso_pob,
                                                 ratio_arb_pob,ratio_bag_pob, ratio_xgb_pob))
 
+results_pob$Gasto<- (results_pob$Gasto)/1000000
+results_pob$Ratio<- (results_pob$Ratio)/1000000
+
+results_pob
+
+library(xtable)
+xtable(results_pob, digits = 1)
+
+library(xtable)
+xtable(results_pob, caption = "Resultados Modelos El Poblado", digits = 1)
 
 ##############################################
 

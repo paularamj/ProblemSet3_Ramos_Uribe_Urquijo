@@ -28,9 +28,9 @@ p_load(skimr, # summary data
 )
 
 ##############################Cargar los datos#################################
-#setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
+setwd("C:/Users/pau_9/Documents/GitHub/ProblemSet3_Ramos_Uribe_Urquijo")
 #setwd("/Users/jdaviduu96/Documents/MECA 2022/Big Data y Machine Learning 2022-13/Problem set 3/ProblemSet3_Ramos_Uribe_Urquijo")
-setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
+#setwd("C:/Users/kurib/OneDrive - Universidad de los Andes/Documentos/MECA/Github/ProblemSet3_Ramos_Uribe_Urquijo")
 
 train<-readRDS("dataPS3/train.Rds")
 test<-readRDS("dataPS3/test.Rds")
@@ -1040,6 +1040,27 @@ test_chap_vf <- housing_chapinero %>%  filter(base == "Test") %>%  select(-base)
 
 train_pob_vf <- housing_poblado %>%  filter(base == "Train") %>%  select(-base)
 test_pob_vf <- housing_poblado %>%  filter(base == "Test") %>%  select(-base)
+
+
+###########################################################################################
+########## --------- Descriptivas ----------- ##########################
+############################################################################################
+
+train_chap_vf$base <- "Chapinero"
+train_pob_vf$base<- "Poblado"
+train_tab <- bind_rows(train_chap_vf,train_pob_vf)
+
+train_tab1<- train_tab%>% select(price, new_piso_vf, new_cuartos_vf, surface_total2, 
+                                 dist_bar, dist_parque, dist_banco, dist_estacionbus, 
+                                 dist_police, new_banos_vf, new_estrato_vf, property_type,
+                                 base)
+train_tab1<-as.data.frame(train_tab1)
+train_tab1 <- train_tab1[,-14]
+
+p_load(gtsummary)
+tab_train <-tbl_summary(train_tab1, by=base)
+as_kable_extra(tab_train, format = "latex")
+
 
 ###########################################################################################
 ########## --------- Modelos de Predicción de precios ----------- ##########################

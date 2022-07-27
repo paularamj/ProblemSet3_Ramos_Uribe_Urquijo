@@ -24,7 +24,8 @@ p_load(skimr, # summary data
        sf, # Leer/escribir/manipular datos espaciales
        leaflet, #visualizci√≥n
        tmaptools, #geocode
-       osmdata # Get OSM data
+       osmdata,
+       expss # Get OSM data
 )
 
 ##############################Cargar los datos#################################
@@ -1673,7 +1674,7 @@ xgboost_chap <- train(
   data = final_chap,
   method = "xgbTree",
   trControl = ctrl,
-  metric = "Sens",
+  metric = "RMSE",
   tuneGrid = grid_price,
   preProcess = c("center", "scale")
 )
@@ -1710,19 +1711,43 @@ xgboost_pob <- train(
   data = final_pob,
   method = "xgbTree",
   trControl = ctrl,
-  metric = "Sens",
+  metric = "RMSE",
   tuneGrid = grid_price,
   preProcess = c("center", "scale")
 )
 
 xgboost_pob$bestTune
 xgboost_Pob_Results <- xgboost_pob$results
+var_imp<- varImp(xgboost_pob, scale = FALSE)
+plot(var_imp)
+
+var_imp_xgb_pob <- var_imp$importance
+var_imp_xgb_pob<- as.data.frame(var_imp_xgb_pob)
+class(var_imp_xgb_pob)
+
+
+graph_xgb_pob <- as.data.frame(graph_xgb_pob)
+graph_xgb_pob$varnames <- row.names(graph_xgb_pob$V1)
+
+rownames(var_imp_xgb_pob) = c("Superficie Total", "Distancia Bares", "Distancia Estacion Bus", 
+                         "No. Banos", "Tipo Propiedad", "Distancia Parque", "Distancia PolicÌa",
+                         "No. Cuartos", "Distancia Bancos", "Estrato 6", "Piso", "Estrato 3",
+                         "Estrato 5", "Estrato 4")
+var_imp_xgb_pob$varnames<- rownames(var_imp_xgb_pob)
+
+
+ggplot(var_imp_xgb_pob, aes(x=reorder(varnames, Overall), y=Overall)) + 
+  geom_point() +
+  geom_segment(aes(x=varnames,xend=varnames,y=0,yend=Overall), color = "#56B4E9") +
+    ylab("Importance") +
+  xlab("Variable Name") +
+  coord_flip()
 
 #---Predicciones
 pred_xgb_pob<-predict(xgboost_pob, final_pob)
 
-mae_xgb_pob<-176011885
-mse_xgb_pob<-(346626774)^2
+mae_xgb_pob<-177684837
+mse_xgb_pob<-(358691318)^2
 
 #################################################################################
 ########################------Criterios mejor modelo--------####################

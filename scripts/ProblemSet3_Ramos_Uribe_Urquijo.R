@@ -1064,6 +1064,52 @@ as_kable_extra(tab_train, format = "latex")
 
 
 ###########################################################################################
+########## --------- Mapas ----------- ##########################
+###########################################################################################
+
+library(devtools)
+
+p_load(devtools,
+       leaflet, 
+       htmlwidgets, 
+       webshot)
+
+qpal1 <- colorQuantile("Blues", train_chap_vf$price, n = 5)
+qpal2 <- colorQuantile("Reds", test_chap_vf$price, n = 5)
+map_chap<- leaflet() %>% addTiles()  %>% addPolygons(data=chapinero)
+
+map_chap<- map_chap%>% addCircles(data=train_chap_vf , col=~qpal1(train_chap_vf$price)) %>% #datos
+  addCircles(data=test_chap_vf , col=~qpal2(test_chap_vf$price))%>% 
+  addPolygons(data=parques_chapinero , col="green",  opacity = 0.5, popup = parques_chapinero$name) %>%  #parques
+  addCircles(data=bares_chapinero, col="red", opacity = 0.5 ) %>%  #bares
+  addCircles(data=bancos_chapinero , col="yellow", opacity = 0.5) %>%  # bancos
+  addCircles(data=estaciones_chapinero, col="black",  opacity = 0.5 ) 
+
+install_phantomjs()
+## save html to png
+saveWidget(map_chap, "leaflet_map_chap.html", selfcontained = FALSE)
+webshot("leaflet_map_chap.html", file = "leaflet_map_chap.png",
+        cliprect = "viewport")
+
+
+#superfie, bares y buses, bares
+qpal3 <- colorQuantile("Reds", train_pob_vf$surface_total2, n = 5)
+qpal4 <- colorQuantile("Reds", test_pob_vf$surface_total2, n = 5)
+map_pob<- leaflet() %>% addTiles()  %>% addPolygons(data=poblado)
+
+map_pob <- map_pob %>%  addCircles(data=train_pob_vf , col=~qpal3(train_pob_vf$surface_total2)) %>%
+  addCircles(data=test_pob_vf , col=~qpal4(test_pob_vf$surface_total2))%>% 
+  addPolygons(data=parques_poblado , col="green",  opacity = 0.5, popup = parques_chapinero$name) %>%  #parques
+  addCircles(data=bares_poblado, col="blue", opacity = 0.5 ) %>%  #bares
+  addCircles(data=estaciones_poblado, col="black",  opacity = 0.5 )
+
+
+install_phantomjs()
+## save html to png
+saveWidget(map_pob, "leaflet_map_pob.html", selfcontained = FALSE)
+webshot("leaflet_map_pob.html", file = "leaflet_map_pob.png",
+        cliprect = "viewport")
+###########################################################################################
 ########## --------- Modelos de Predicci√≥n de precios ----------- ##########################
 ############################################################################################
 
@@ -1751,7 +1797,7 @@ graph_xgb_pob <- as.data.frame(graph_xgb_pob)
 graph_xgb_pob$varnames <- row.names(graph_xgb_pob$V1)
 
 rownames(var_imp_xgb_pob) = c("Superficie Total", "Distancia Bares", "Distancia Estacion Bus", 
-                         "No. Banos", "Tipo Propiedad", "Distancia Parque", "Distancia PolicÌa",
+                         "No. Banos", "Tipo Propiedad", "Distancia Parque", "Distancia Polic?a",
                          "No. Cuartos", "Distancia Bancos", "Estrato 6", "Piso", "Estrato 3",
                          "Estrato 5", "Estrato 4")
 var_imp_xgb_pob$varnames<- rownames(var_imp_xgb_pob)
